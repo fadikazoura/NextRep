@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: nextrep-db
+    environment:
+      POSTGRES_DB: nextrep
+      POSTGRES_USER: nextrep
+      POSTGRES_PASSWORD: nextrep
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
