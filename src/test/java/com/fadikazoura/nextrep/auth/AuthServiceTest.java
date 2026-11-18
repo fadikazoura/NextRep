@@ -21,6 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -30,6 +31,9 @@ class AuthServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TokenService tokenService;
 
     @InjectMocks
     private AuthService authService;
@@ -70,4 +74,40 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.register(new RegisterRequest("race@example.com", "supersecret123")))
                 .isInstanceOf(EmailAlreadyUsedException.class);
     }
+
+    @Test
+    void loginReturnsTokenForValidCredentials() {
+        User user = new User("fadi@example.com", "hashed-password");
+        TokenResponse token = new TokenResponse("jwt-token", "Bearer", 3600);
+        when(userRepository.findByEmail("fadi@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("supersecret123", "hashed-password")).thenReturn(true);
+        when(tokenService.issueToken(user)).thenReturn(token);
+
+        TokenResponse response = authService.login(new LoginRequest(" FADI@example.com ", "supersecret123"));
+
+        assertThat(response).isEqualTo(token);
+    }
+
+    @Test
+    void loginFailsWithWrongPassword() {
+        User user = new User("fadi@example.com", "hashed-password");
+        when(userRepository.findByEmail("fadi@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpassword", "hashed-password")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("fadi@example.com", "wrongpassword")))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void loginFailsForUnknownEmail() {
+        when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@example.com", "supersecret123")))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verifyNoInteractions(tokenService);
+    }
+
 }
