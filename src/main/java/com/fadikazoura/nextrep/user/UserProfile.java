@@ -102,4 +102,9 @@ public class UserProfile {
         this.equipment = equipment;
         this.trainingDays = EnumSet.copyOf(trainingDays);
     }
+    public void replaceTrainingDays(Set<DayOfWeek> days) {
+        trainingDays.clear();
+        trainingDays.addAll(days);
+    }
+
 }
