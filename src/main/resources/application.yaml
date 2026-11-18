@@ -1,3 +1,11 @@
 spring:
   application:
     name: nextrep
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nextrep
+    username: nextrep
+    password: nextrep
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
