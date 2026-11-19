@@ -54,7 +54,8 @@ public class GeminiClient {
             return extractText(response);
         } catch (RestClientException e) {
             // Never log the request headers: they contain the API key.
-            log.warn("Gemini request failed: {}", e.getMessage());
+            log.warn("Gemini request to model {} failed: {} (root cause: {})",
+                    properties.model(), e.getMessage(), e.getMostSpecificCause().toString());
             throw new AiUnavailableException("Gemini request failed", e);
         }
     }
