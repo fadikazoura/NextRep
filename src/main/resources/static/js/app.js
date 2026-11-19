@@ -5,6 +5,8 @@ import { loginView, registerView } from './views/auth.js';
 import { homeView } from './views/home.js';
 import { planView } from './views/plan.js';
 import { profileView } from './views/profile.js';
+import { workoutView } from './views/workout.js';
+import { progressView } from './views/progress.js';
 import { hasProfile, resetProfileStatus } from './profile-status.js';
 
 /** Hash routes: #/path. Public routes work without logging in. */
@@ -13,8 +15,8 @@ const ROUTES = {
     '/register': { view: registerView, public: true },
     '/': { view: homeView },
     '/plan': { view: planView, needsProfile: true },
-    '/workout': { view: comingSoon, needsProfile: true },
-    '/progress': { view: comingSoon, needsProfile: true },
+    '/workout': { view: workoutView, needsProfile: true },
+    '/progress': { view: progressView, needsProfile: true },
     '/profile': { view: profileView },
 };
 
