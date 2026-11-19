@@ -374,3 +374,17 @@ h2 { font-size: 1.15rem; margin-block-start: 8px; }
 .chart-area { fill: var(--accent); opacity: 0.12; }
 .chart-dot { fill: var(--accent); }
 .pr-big-start { align-items: flex-start; }
+
+/* ---------- show password ---------- */
+.password-wrap { position: relative; }
+.password-wrap input { padding-inline-end: 52px; }
+.password-toggle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 4px;
+    width: 44px;
+    border: 0;
+    background: transparent;
+    font-size: 1.1rem;
+    cursor: pointer;
+}

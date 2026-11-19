@@ -86,7 +86,7 @@ function authForm({ title, submitLabel, switchText, switchLabel, switchHref, pas
         h('div', { class: 'field' }, h('label', { for: 'email' }, t('auth.email')), email, emailError),
         h('div', { class: 'field' },
             h('label', { for: 'password' }, t('auth.password')),
-            password,
+            passwordField(password),
             passwordHint ? h('p', { class: 'muted small' }, passwordHint) : null,
             passwordError),
         formError,
@@ -99,6 +99,21 @@ function authForm({ title, submitLabel, switchText, switchLabel, switchHref, pas
             h('div', { class: 'brand' }, 'Next', h('span', {}, 'Rep')),
             h('p', { class: 'muted' }, t('app.tagline'))),
         form);
+}
+
+/** Wraps the password input with an eye button that toggles between hidden and visible text. */
+function passwordField(input) {
+    const toggle = h('button', { type: 'button', class: 'password-toggle', 'aria-pressed': 'false',
+        'aria-controls': input.id, 'aria-label': t('auth.showPassword') }, '👁');
+    toggle.addEventListener('click', () => {
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        toggle.textContent = show ? '🙈' : '👁';
+        toggle.setAttribute('aria-pressed', String(show));
+        toggle.setAttribute('aria-label', show ? t('auth.hidePassword') : t('auth.showPassword'));
+        input.focus();
+    });
+    return h('div', { class: 'password-wrap' }, input, toggle);
 }
 
 function messageFor(error) {

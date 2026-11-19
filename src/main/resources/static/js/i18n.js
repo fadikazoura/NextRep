@@ -150,6 +150,8 @@ const STRINGS = {
         'progress.noWeight': "No weigh-ins yet.",
         'progress.todayWeight': "Today's weight (kg)",
         'progress.weightSaved': "Weight saved",
+        'auth.showPassword': "Show password",
+        'auth.hidePassword': "Hide password",
     },
     he: {
         'app.tagline': 'המאמן החכם שלך לחדר הכושר',
@@ -308,6 +310,8 @@ const STRINGS = {
         'progress.noWeight': "עדיין אין שקילות.",
         'progress.todayWeight': "המשקל היום (ק״ג)",
         'progress.weightSaved': "המשקל נשמר",
+        'auth.showPassword': "הצג סיסמה",
+        'auth.hidePassword': "הסתר סיסמה",
     },
 };
 
