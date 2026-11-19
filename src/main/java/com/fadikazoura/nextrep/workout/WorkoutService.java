@@ -1,5 +1,6 @@
 package com.fadikazoura.nextrep.workout;
 
+import com.fadikazoura.nextrep.common.PageResponse;
 import com.fadikazoura.nextrep.exercise.Exercise;
 import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
 import com.fadikazoura.nextrep.exercise.ExerciseRepository;
@@ -10,6 +11,7 @@ import com.fadikazoura.nextrep.user.User;
 import com.fadikazoura.nextrep.user.UserNotFoundException;
 import com.fadikazoura.nextrep.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class WorkoutService {
+
+    static final int MAX_PAGE_SIZE = 100;
 
     private final WorkoutSessionRepository workoutSessionRepository;
     private final UserRepository userRepository;
@@ -42,6 +46,14 @@ public class WorkoutService {
         return workoutSessionRepository.findByUserIdAndCompletedAtIsNull(userId)
                 .map(WorkoutResponse::from)
                 .orElseThrow(WorkoutNotFoundException::noneInProgress);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<WorkoutSummaryResponse> history(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE));
+        return PageResponse.from(workoutSessionRepository
+                .findByUserIdAndCompletedAtIsNotNullOrderByStartedAtDesc(userId, pageRequest)
+                .map(WorkoutSummaryResponse::from));
     }
 
     @Transactional(readOnly = true)

@@ -13,5 +13,6 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
 
     Optional<WorkoutSession> findByUserIdAndCompletedAtIsNull(Long userId);
 
-    Page<WorkoutSession> findByUserIdOrderByStartedAtDesc(Long userId, Pageable pageable);
+    /** Completed workouts only, newest first. */
+    Page<WorkoutSession> findByUserIdAndCompletedAtIsNotNullOrderByStartedAtDesc(Long userId, Pageable pageable);
 }
