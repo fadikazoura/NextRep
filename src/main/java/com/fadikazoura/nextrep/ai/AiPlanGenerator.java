@@ -4,6 +4,8 @@ import com.fadikazoura.nextrep.exercise.ExerciseResponse;
 import com.fadikazoura.nextrep.plan.InvalidPlanException;
 import com.fadikazoura.nextrep.plan.PlanBlueprint;
 import com.fadikazoura.nextrep.plan.PlanBlueprintValidator;
+import com.fadikazoura.nextrep.plan.PlanGenerationInput;
+import com.fadikazoura.nextrep.plan.SmartPlanGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -15,7 +17,7 @@ import java.util.List;
 /** Asks the AI for a plan, then parses and validates the answer before anyone uses it. */
 @Component
 @RequiredArgsConstructor
-public class AiPlanGenerator {
+public class AiPlanGenerator implements SmartPlanGenerator {
 
     private static final JsonMapper JSON = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -24,8 +26,15 @@ public class AiPlanGenerator {
     private final GeminiClient geminiClient;
     private final PlanBlueprintValidator validator;
 
-    public boolean isEnabled() {
+    @Override
+    public boolean isAvailable() {
         return geminiClient.isEnabled();
+    }
+
+    @Override
+    public PlanBlueprint generate(PlanGenerationInput input, int age, String injuries,
+                                  List<ExerciseResponse> catalog) {
+        return generate(new AiPlanRequest(input, age, injuries), catalog);
     }
 
     /**

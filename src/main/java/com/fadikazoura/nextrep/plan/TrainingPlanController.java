@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,8 +25,9 @@ public class TrainingPlanController {
 
     @PostMapping("/generate")
     @ResponseStatus(HttpStatus.CREATED)
-    public TrainingPlanResponse generate(@AuthenticationPrincipal Jwt jwt) {
-        return trainingPlanService.generateDefaultPlan(currentUserId(jwt));
+    public TrainingPlanResponse generate(@AuthenticationPrincipal Jwt jwt,
+                                         @RequestParam(defaultValue = "false") boolean ai) {
+        return trainingPlanService.generatePlan(currentUserId(jwt), ai);
     }
 
     private static Long currentUserId(Jwt jwt) {
