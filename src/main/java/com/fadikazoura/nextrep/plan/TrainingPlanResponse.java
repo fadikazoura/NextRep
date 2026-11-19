@@ -10,10 +10,10 @@ import java.util.List;
 public record TrainingPlanResponse(Long id, String name, PlanSource source, Instant createdAt,
                                    List<DayResponse> days) {
 
-    public record DayResponse(DayOfWeek dayOfWeek, String name, List<PlanExerciseResponse> exercises) {
+    public record DayResponse(Long id, DayOfWeek dayOfWeek, String name, List<PlanExerciseResponse> exercises) {
 
         static DayResponse from(PlanDay day) {
-            return new DayResponse(day.getDayOfWeek(), day.getName(),
+            return new DayResponse(day.getId(), day.getDayOfWeek(), day.getName(),
                     day.getExercises().stream().map(PlanExerciseResponse::from).toList());
         }
     }

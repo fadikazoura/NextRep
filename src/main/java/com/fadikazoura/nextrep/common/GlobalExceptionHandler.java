@@ -2,7 +2,13 @@ package com.fadikazoura.nextrep.common;
 
 import com.fadikazoura.nextrep.auth.InvalidCredentialsException;
 import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
+import com.fadikazoura.nextrep.plan.PlanDayNotFoundException;
 import com.fadikazoura.nextrep.plan.PlanNotFoundException;
+import com.fadikazoura.nextrep.workout.EmptyWorkoutException;
+import com.fadikazoura.nextrep.workout.WorkoutAlreadyCompletedException;
+import com.fadikazoura.nextrep.workout.WorkoutInProgressException;
+import com.fadikazoura.nextrep.workout.WorkoutNotFoundException;
+import com.fadikazoura.nextrep.workout.WorkoutSetNotFoundException;
 import com.fadikazoura.nextrep.user.EmailAlreadyUsedException;
 import com.fadikazoura.nextrep.user.InvalidProfileException;
 import com.fadikazoura.nextrep.user.ProfileNotFoundException;
@@ -54,6 +60,36 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PlanNotFoundException.class)
     ProblemDetail handlePlanNotFound(PlanNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Plan not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(PlanDayNotFoundException.class)
+    ProblemDetail handlePlanDayNotFound(PlanDayNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "Plan day not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkoutNotFoundException.class)
+    ProblemDetail handleWorkoutNotFound(WorkoutNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "Workout not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkoutSetNotFoundException.class)
+    ProblemDetail handleWorkoutSetNotFound(WorkoutSetNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "Set not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkoutInProgressException.class)
+    ProblemDetail handleWorkoutInProgress(WorkoutInProgressException ex) {
+        return problem(HttpStatus.CONFLICT, "Workout in progress", ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkoutAlreadyCompletedException.class)
+    ProblemDetail handleWorkoutAlreadyCompleted(WorkoutAlreadyCompletedException ex) {
+        return problem(HttpStatus.CONFLICT, "Workout already completed", ex.getMessage());
+    }
+
+    @ExceptionHandler(EmptyWorkoutException.class)
+    ProblemDetail handleEmptyWorkout(EmptyWorkoutException ex) {
+        return problem(HttpStatus.CONFLICT, "Empty workout", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

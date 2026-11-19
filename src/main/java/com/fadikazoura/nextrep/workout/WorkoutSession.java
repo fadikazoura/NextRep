@@ -86,6 +86,9 @@ public class WorkoutSession {
 
     public void complete() {
         ensureInProgress();
+        if (sets.isEmpty()) {
+            throw new EmptyWorkoutException(id);
+        }
         this.completedAt = Instant.now();
     }
 
