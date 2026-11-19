@@ -49,7 +49,7 @@ class LoginFlowIntegrationTest {
 
         postJson("/api/auth/login", "wrongpass@example.com", "not-the-password")
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.detail").value("Invalid email or password"));
+                .andExpect(jsonPath("$.detail").value("Invalid email/username or password"));
     }
 
     @Test

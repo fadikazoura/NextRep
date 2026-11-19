@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, Long> {
@@ -12,6 +13,9 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
     Optional<WorkoutSession> findByIdAndUserId(Long id, Long userId);
 
     Optional<WorkoutSession> findByUserIdAndCompletedAtIsNull(Long userId);
+
+    /** Every workout, oldest first, for the data export. */
+    List<WorkoutSession> findByUserIdOrderByStartedAtAsc(Long userId);
 
     /** Completed workouts only, newest first. */
     Page<WorkoutSession> findByUserIdAndCompletedAtIsNotNullOrderByStartedAtDesc(Long userId, Pageable pageable);

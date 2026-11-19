@@ -32,7 +32,7 @@ class UserRepositoryTest {
 
     @Test
     void savesUserAndFindsItByEmail() {
-        userRepository.saveAndFlush(new User("fadi@example.com", "hashed-password"));
+        userRepository.saveAndFlush(new User("fadi", "fadi@example.com", "hashed-password"));
 
         var found = userRepository.findByEmail("fadi@example.com");
 
@@ -43,7 +43,7 @@ class UserRepositoryTest {
 
     @Test
     void existsByEmailReturnsTrueOnlyForExistingEmail() {
-        userRepository.saveAndFlush(new User("exists@example.com", "hashed-password"));
+        userRepository.saveAndFlush(new User("exists", "exists@example.com", "hashed-password"));
 
         assertThat(userRepository.existsByEmail("exists@example.com")).isTrue();
         assertThat(userRepository.existsByEmail("missing@example.com")).isFalse();
@@ -51,15 +51,15 @@ class UserRepositoryTest {
 
     @Test
     void rejectsDuplicateEmail() {
-        userRepository.saveAndFlush(new User("dup@example.com", "hash-1"));
+        userRepository.saveAndFlush(new User("dup1", "dup@example.com", "hash-1"));
 
-        assertThatThrownBy(() -> userRepository.saveAndFlush(new User("dup@example.com", "hash-2")))
+        assertThatThrownBy(() -> userRepository.saveAndFlush(new User("dup2", "dup@example.com", "hash-2")))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     void savesProfileWithSharedIdAndTrainingDays() {
-        User user = userRepository.save(new User("profile@example.com", "hashed-password"));
+        User user = userRepository.save(new User("profile", "profile@example.com", "hashed-password"));
         UserProfile profile = new UserProfile(
                 user,
                 LocalDate.of(2003, 5, 10),
@@ -83,7 +83,7 @@ class UserRepositoryTest {
 
     @Test
     void databaseRejectsInvalidHeight() {
-        User user = userRepository.save(new User("short@example.com", "hashed-password"));
+        User user = userRepository.save(new User("short", "short@example.com", "hashed-password"));
         UserProfile profile = new UserProfile(
                 user,
                 LocalDate.of(2003, 5, 10),

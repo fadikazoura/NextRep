@@ -77,7 +77,7 @@ class AuthServiceTest {
 
     @Test
     void loginReturnsTokenForValidCredentials() {
-        User user = new User("fadi@example.com", "hashed-password");
+        User user = new User("fadi", "fadi@example.com", "hashed-password");
         TokenResponse token = new TokenResponse("jwt-token", "Bearer", 3600);
         when(userRepository.findByEmail("fadi@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("supersecret123", "hashed-password")).thenReturn(true);
@@ -90,7 +90,7 @@ class AuthServiceTest {
 
     @Test
     void loginFailsWithWrongPassword() {
-        User user = new User("fadi@example.com", "hashed-password");
+        User user = new User("fadi", "fadi@example.com", "hashed-password");
         when(userRepository.findByEmail("fadi@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongpassword", "hashed-password")).thenReturn(false);
 

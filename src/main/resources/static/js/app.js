@@ -9,6 +9,11 @@ import { profileView } from './views/profile.js';
 import { workoutView } from './views/workout.js';
 import { progressView } from './views/progress.js';
 import { hasProfile, resetProfileStatus } from './profile-status.js';
+import { settingsView } from './views/settings.js';
+import { avatar } from './avatars.js';
+import { cachedUser, clearCurrentUser, currentUser } from './current-user.js';
+import { closeAccountMenu, toggleAccountMenu } from './account-menu.js';
+import { openContact, openRating } from './views/feedback.js';
 
 /** Hash routes: #/path. Public routes work without logging in. */
 const ROUTES = {
@@ -19,6 +24,7 @@ const ROUTES = {
     '/workout': { view: workoutView, needsProfile: true },
     '/progress': { view: progressView, needsProfile: true },
     '/profile': { view: profileView },
+    '/settings': { view: settingsView },
 };
 
 const TABS = [
@@ -80,14 +86,24 @@ function renderChrome(path) {
     themeButton.replaceChildren(icon(theme === 'dark' ? 'sun' : 'moon'));
     themeButton.setAttribute('aria-label', theme === 'dark' ? t('theme.toLight') : t('theme.toDark'));
 
+    // Logged-in users change the language in Settings; the login and sign-up pages keep a quick toggle.
     const langButton = document.getElementById('lang-toggle');
+    langButton.hidden = session.loggedIn;
     langButton.textContent = t('lang.switch');
     langButton.setAttribute('aria-label', t('lang.switchLabel'));
 
-    const logout = document.getElementById('logout');
-    logout.hidden = !session.loggedIn;
-    logout.replaceChildren(icon('logout', { size: 18 }), h('span', { class: 'logout-label' }, t('auth.logout')));
-    logout.setAttribute('aria-label', t('auth.logout'));
+    renderAccountButton();
+
+    // Rate us / Contact us live in the top bar, for logged-in users.
+    const rate = document.getElementById('rate-button');
+    rate.hidden = !session.loggedIn;
+    rate.replaceChildren(icon('star', { size: 18 }));
+    rate.setAttribute('aria-label', t('menu.rate'));
+    rate.title = t('menu.rate');
+
+    const contact = document.getElementById('contact-button');
+    contact.hidden = !session.loggedIn;
+    contact.replaceChildren(h('span', {}, t('menu.contact')));
 
     const tabbar = document.getElementById('tabbar');
     tabbar.hidden = !session.loggedIn;
@@ -97,6 +113,24 @@ function renderChrome(path) {
         },
         h('span', { class: 'tab-icon', 'aria-hidden': 'true' }, icon(tab.icon, { size: 22 })),
         h('span', {}, t(tab.key)))));
+}
+
+/** The avatar in the top bar; the user is loaded once and then kept in memory. */
+function renderAccountButton() {
+    const button = document.getElementById('account-button');
+    button.hidden = !session.loggedIn;
+    button.setAttribute('aria-label', t('menu.label'));
+    if (!session.loggedIn) return;
+    const user = cachedUser();
+    button.replaceChildren(avatar(user, 36));
+    if (!user) currentUser().catch(() => { /* a failed request is handled where it happens */ });
+}
+
+function logOut() {
+    session.clear();
+    resetProfileStatus();
+    clearCurrentUser();
+    location.hash = '#/login';
 }
 
 function comingSoon() {
@@ -118,21 +152,34 @@ document.getElementById('lang-toggle').addEventListener('click', () => {
     setLang(getLang() === 'en' ? 'he' : 'en');
 });
 
-document.getElementById('logout').addEventListener('click', () => {
-    session.clear();
-    resetProfileStatus();
-    location.hash = '#/login';
+document.getElementById('account-button').addEventListener('click', (event) => {
+    toggleAccountMenu(event.currentTarget, cachedUser(), [
+        { icon: 'user', label: t('menu.trainingProfile'), href: '#/profile' },
+        { icon: 'settings', label: t('menu.settings'), href: '#/settings' },
+        { icon: 'logout', label: t('auth.logout'), onSelect: logOut, danger: true },
+    ]);
 });
+
+document.getElementById('rate-button').addEventListener('click', () => {
+    openRating().catch(() => toast(t('errors.generic')));
+});
+document.getElementById('contact-button').addEventListener('click', openContact);
+
+window.addEventListener('userchange', renderAccountButton);
 
 window.addEventListener('session-expired', () => {
     resetProfileStatus();
+    clearCurrentUser();
     pendingNotice = t('auth.sessionExpired');
     location.hash = '#/login';
     toast(t('auth.sessionExpired'));
 });
 
 window.addEventListener('langchange', render);
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => {
+    closeAccountMenu();
+    render();
+});
 render();
 
 // Installable app (PWA): the service worker keeps the app shell available offline.

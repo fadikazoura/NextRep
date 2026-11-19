@@ -20,11 +20,13 @@
 </head>
 <body>
 <header class="topbar">
-    <a class="brand" href="#/">Next<span>Rep</span></a>
+    <a class="brand" href="#/" aria-label="NextRep"><span class="brand-full">Next<span>Rep</span></span><span class="brand-short" aria-hidden="true">N<span>R</span></span></a>
     <div class="topbar-actions">
+        <button id="rate-button" class="icon-btn" type="button" hidden></button>
+        <button id="contact-button" class="contact-pill" type="button" hidden></button>
         <button id="lang-toggle" class="icon-btn" type="button"></button>
         <button id="theme-toggle" class="icon-btn" type="button"></button>
-        <button id="logout" class="icon-btn" type="button" hidden></button>
+        <button id="account-button" class="avatar-btn" type="button" aria-haspopup="menu" aria-expanded="false" hidden></button>
     </div>
 </header>
 
