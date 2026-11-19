@@ -26,4 +26,30 @@ public interface WorkoutSetRepository extends JpaRepository<WorkoutSet, Long> {
     List<WorkoutSet> findCompletedSets(@Param("userId") Long userId,
                                        @Param("exerciseIds") Collection<Long> exerciseIds,
                                        @Param("since") Instant since);
+
+    /**
+     * Every distinct (exercise, weight, reps) the user completed, with the first time it was done.
+     * The database collapses repeated sets, so the result stays small even after years of training.
+     */
+    @Query("""
+            SELECT s.exercise.id AS exerciseId, s.weightKg AS weightKg, s.reps AS reps,
+                   MIN(ws.startedAt) AS firstPerformedAt
+            FROM WorkoutSet s
+            JOIN s.session ws
+            WHERE ws.user.id = :userId
+              AND ws.completedAt IS NOT NULL
+            GROUP BY s.exercise.id, s.weightKg, s.reps
+            """)
+    List<SetSummary> findCompletedSetSummaries(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT s FROM WorkoutSet s
+            JOIN FETCH s.session ws
+            WHERE ws.user.id = :userId
+              AND s.exercise.id = :exerciseId
+              AND ws.completedAt IS NOT NULL
+            ORDER BY ws.startedAt, s.id
+            """)
+    List<WorkoutSet> findCompletedSetsOfExercise(@Param("userId") Long userId,
+                                                 @Param("exerciseId") Long exerciseId);
 }
