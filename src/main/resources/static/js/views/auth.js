@@ -1,6 +1,7 @@
 import { h } from '../dom.js';
 import { t } from '../i18n.js';
 import { api, ApiError, session } from '../api.js';
+import { hasProfile, resetProfileStatus } from '../profile-status.js';
 
 export function loginView({ notice } = {}) {
     return authForm({
@@ -32,7 +33,8 @@ export function registerView() {
 async function logIn(credentials) {
     const { accessToken } = await api('/api/auth/login', { method: 'POST', body: credentials, authenticated: false });
     session.save(accessToken);
-    location.hash = '#/';
+    resetProfileStatus();
+    location.hash = (await hasProfile()) ? '#/' : '#/profile';
 }
 
 function authForm({ title, submitLabel, switchText, switchLabel, switchHref, passwordHint, notice, onSubmit }) {

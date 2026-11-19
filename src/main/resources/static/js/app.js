@@ -3,16 +3,19 @@ import { getLang, setLang, t } from './i18n.js';
 import { ApiError, session } from './api.js';
 import { loginView, registerView } from './views/auth.js';
 import { homeView } from './views/home.js';
+import { planView } from './views/plan.js';
+import { profileView } from './views/profile.js';
+import { hasProfile, resetProfileStatus } from './profile-status.js';
 
 /** Hash routes: #/path. Public routes work without logging in. */
 const ROUTES = {
     '/login': { view: loginView, public: true },
     '/register': { view: registerView, public: true },
     '/': { view: homeView },
-    '/plan': { view: comingSoon },
-    '/workout': { view: comingSoon },
-    '/progress': { view: comingSoon },
-    '/profile': { view: comingSoon },
+    '/plan': { view: planView, needsProfile: true },
+    '/workout': { view: comingSoon, needsProfile: true },
+    '/progress': { view: comingSoon, needsProfile: true },
+    '/profile': { view: profileView },
 };
 
 const TABS = [
@@ -26,8 +29,9 @@ const TABS = [
 const main = document.getElementById('view');
 let pendingNotice = null;
 
+/** The route part of the hash, without query params: "#/workout?day=3" -> "/workout". */
 function currentPath() {
-    return location.hash.replace(/^#/, '') || '/';
+    return location.hash.replace(/^#/, '').split('?')[0] || '/';
 }
 
 async function render() {
@@ -52,6 +56,11 @@ async function render() {
     try {
         const notice = pendingNotice;
         pendingNotice = null;
+        if (route.needsProfile && !(await hasProfile())) {
+            pendingNotice = t('profile.required');
+            location.hash = '#/profile';
+            return;
+        }
         const view = await route.view({ notice });
         if (currentPath() === path) main.replaceChildren(view);
     } catch (error) {
@@ -107,10 +116,12 @@ document.getElementById('lang-toggle').addEventListener('click', () => {
 
 document.getElementById('logout').addEventListener('click', () => {
     session.clear();
+    resetProfileStatus();
     location.hash = '#/login';
 });
 
 window.addEventListener('session-expired', () => {
+    resetProfileStatus();
     pendingNotice = t('auth.sessionExpired');
     location.hash = '#/login';
     toast(t('auth.sessionExpired'));
