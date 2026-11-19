@@ -8,6 +8,14 @@
 **A smart gym workout tracker backend.** NextRep builds a personalised weekly training plan (rule-based or with AI),
 lets you log every set, tells you **how much to lift next time**, and tracks your personal records and progress.
 
+### 🚀 Live demo
+
+**API docs (Swagger UI): https://nextrep-07r6.onrender.com/swagger-ui.html**
+
+> Hosted on free tiers (Render + Neon). After a period of inactivity the server sleeps, so the **first request can take
+> 1–3 minutes** to wake it up — after that it responds normally. Register a user, log in, click **Authorize**, and try
+> `POST /api/users/me/plan/generate?ai=true`.
+
 ---
 
 ## Features
@@ -147,7 +155,7 @@ messages for validation errors.
 
 ## Roadmap
 
-- [ ] Docker image and cloud deployment
+- [x] Docker image and cloud deployment (Render + Neon, auto-deploy from `main`)
 - [ ] Web UI (plans, workout logging, progress charts)
 - [ ] Refresh tokens
 - [ ] Per-user time zones for dates
