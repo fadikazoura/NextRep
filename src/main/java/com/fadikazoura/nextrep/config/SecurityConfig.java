@@ -23,7 +23,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/error").permitAll()
                         // The web UI's static files are public; every API call it makes still needs a token.
-                        .requestMatchers(HttpMethod.GET, "/", "/index.html", "/favicon.svg", "/css/**", "/js/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/", "/index.html", "/favicon.svg", "/manifest.json", "/sw.js",
+                                "/css/**", "/js/**", "/fonts/**", "/icons/**").permitAll()
                         // API documentation is public; the endpoints it describes still require a token.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Health checks for the hosting platform; they expose only UP/DOWN, no details.

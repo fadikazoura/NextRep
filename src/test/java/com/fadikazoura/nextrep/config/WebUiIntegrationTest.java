@@ -36,6 +36,16 @@ class WebUiIntegrationTest {
     }
 
     @Test
+    void servesInstallableAppFilesWithoutLogin() throws Exception {
+        mockMvc.perform(get("/manifest.json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"short_name\": \"NextRep\"")));
+        mockMvc.perform(get("/sw.js")).andExpect(status().isOk());
+        mockMvc.perform(get("/icons/icon-192.png")).andExpect(status().isOk());
+        mockMvc.perform(get("/fonts/barlow-condensed-700.woff2")).andExpect(status().isOk());
+    }
+
+    @Test
     void theApiStillRequiresAToken() throws Exception {
         mockMvc.perform(get("/api/users/me")).andExpect(status().isUnauthorized());
     }

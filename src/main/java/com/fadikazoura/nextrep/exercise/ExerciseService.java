@@ -24,4 +24,10 @@ public class ExerciseService {
                 .map(ExerciseResponse::from)
                 .orElseThrow(() -> new ExerciseNotFoundException(id));
     }
+
+    public ExerciseGuideResponse getGuide(Long id) {
+        return exerciseRepository.findById(id)
+                .map(ExerciseGuideResponse::from)
+                .orElseThrow(() -> new ExerciseNotFoundException(id));
+    }
 }

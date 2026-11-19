@@ -374,3 +374,422 @@ h2 { font-size: 1.15rem; margin-block-start: 8px; }
 .chart-area { fill: var(--accent); opacity: 0.12; }
 .chart-dot { fill: var(--accent); }
 .pr-big-start { align-items: flex-start; }
+
+/* ---------- exercise guide ---------- */
+.ex-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+.ex-link:hover .ex-info, .ex-link:focus-visible .ex-info { color: var(--accent); }
+.ex-info { color: var(--muted); font-size: 0.9em; font-weight: 400; }
+.ex-title { font-weight: 700; }
+
+.sheet {
+    width: min(560px, 100%);
+    max-height: 85vh;
+    margin: auto auto 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    background: var(--surface);
+    color: var(--text);
+    overflow-y: auto;
+}
+.sheet::backdrop { background: rgb(0 0 0 / 0.55); }
+.sheet h2 { margin: 0; font-size: 1.2rem; }
+
+@media (min-width: 640px) {
+    .sheet { margin: auto; border-radius: 20px; }
+}
+
+.guide-steps { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }
+
+.guide-mistake {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.guide-mistake p { margin: 4px 0 0; }
+
+/* ---------- show password ---------- */
+.password-wrap { position: relative; }
+.password-wrap input { padding-inline-end: 52px; }
+.password-toggle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 4px;
+    width: 44px;
+    border: 0;
+    background: transparent;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+/* ---------- gym atmosphere: rubber-floor texture + overhead light (pure CSS, no images to download) ---------- */
+:root[data-theme="dark"] {
+    --bg: #0c0e11;
+    --floor-speck-1: rgba(255, 255, 255, 0.045);
+    --floor-speck-2: rgba(198, 255, 61, 0.03);
+    --floor-speck-3: rgba(255, 255, 255, 0.025);
+    --floor-glow: rgba(198, 255, 61, 0.11);
+    --floor-vignette: rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="light"] {
+    --bg: #eceef1;
+    --floor-speck-1: rgba(20, 23, 28, 0.06);
+    --floor-speck-2: rgba(77, 124, 15, 0.05);
+    --floor-speck-3: rgba(20, 23, 28, 0.035);
+    --floor-glow: rgba(77, 124, 15, 0.12);
+    --floor-vignette: rgba(20, 23, 28, 0.06);
+}
+
+/* A fixed layer behind everything, so the texture stays still while the content scrolls. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 90% 45% at 50% -8%, var(--floor-glow), transparent 70%),
+        radial-gradient(ellipse 120% 80% at 50% 120%, var(--floor-vignette), transparent 60%),
+        radial-gradient(circle at 30% 40%, var(--floor-speck-1) 0.8px, transparent 1.4px) 0 0 / 7px 7px,
+        radial-gradient(circle at 70% 60%, var(--floor-speck-2) 1px, transparent 1.6px) 3px 5px / 11px 13px,
+        radial-gradient(circle at 50% 50%, var(--floor-speck-3) 1.2px, transparent 2px) 9px 2px / 23px 19px,
+        var(--bg);
+}
+
+/* Cards float slightly above the floor. */
+.card { border-color: color-mix(in srgb, var(--border) 80%, var(--accent) 20%); }
+:root[data-theme="dark"] .card { background: color-mix(in srgb, var(--surface) 94%, transparent); }
+
+/* Login / register: a barbell drawn behind the logo. */
+.hero { position: relative; isolation: isolate; }
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: no-repeat center / min(340px, 90%) auto;
+    opacity: 0.16;
+}
+:root[data-theme="dark"] .hero::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 90'%3E%3Cg fill='%23c6ff3d'%3E%3Crect x='0' y='41' width='300' height='8' rx='4'/%3E%3Crect x='30' y='10' width='16' height='70' rx='4'/%3E%3Crect x='50' y='20' width='11' height='50' rx='3'/%3E%3Crect x='65' y='33' width='8' height='24' rx='2'/%3E%3Crect x='254' y='10' width='16' height='70' rx='4'/%3E%3Crect x='239' y='20' width='11' height='50' rx='3'/%3E%3Crect x='227' y='33' width='8' height='24' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .hero::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 90'%3E%3Cg fill='%234d7c0f'%3E%3Crect x='0' y='41' width='300' height='8' rx='4'/%3E%3Crect x='30' y='10' width='16' height='70' rx='4'/%3E%3Crect x='50' y='20' width='11' height='50' rx='3'/%3E%3Crect x='65' y='33' width='8' height='24' rx='2'/%3E%3Crect x='254' y='10' width='16' height='70' rx='4'/%3E%3Crect x='239' y='20' width='11' height='50' rx='3'/%3E%3Crect x='227' y='33' width='8' height='24' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Users who ask the OS for less visual noise get a plain background. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    body::before { background: var(--bg); }
+}
+
+/* =====================================================================
+   Design upgrade: sporty font, SVG icons, home dashboard, skeletons,
+   rest timer, PR celebration.
+   ===================================================================== */
+
+/* ---------- sporty display font (self-hosted, Latin only; Hebrew falls back to the system font) ---------- */
+@font-face {
+    font-family: "Barlow Condensed";
+    src: url("/fonts/barlow-condensed-600.woff2") format("woff2");
+    font-weight: 600;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Barlow Condensed";
+    src: url("/fonts/barlow-condensed-700.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
+}
+:root { --display: "Barlow Condensed", var(--font); }
+
+h1, .hero-title, .brand, .num, .stat strong, .pr-big strong, .rest-time, .pr-title,
+.set-form input, .ex-scheme, .rec-target, .workout-clock {
+    font-family: var(--display);
+    letter-spacing: 0.01em;
+}
+h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.1; margin: 0; }
+.hero-title { font-size: 1.9rem; font-weight: 700; line-height: 1.1; margin: 0; text-transform: uppercase; }
+.brand { font-weight: 700; font-size: 1.55rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.hero .brand { font-size: 3.2rem; }
+.set-form input { font-size: 1.4rem; }
+.ex-scheme, .rec-target { font-size: 1.15rem; }
+.workout-clock { font-size: 1.15rem; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- icons ---------- */
+.icon { flex-shrink: 0; vertical-align: middle; }
+.with-icon { display: inline-flex; align-items: center; gap: 6px; }
+.btn .icon { margin-inline-end: 2px; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tabbar a .tab-icon { display: flex; }
+.tabbar a[aria-current="page"] .tab-icon {
+    padding: 2px 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+[dir="rtl"] .icon-chevron { transform: scaleX(-1); }
+.ex-info { display: inline-flex; }
+.password-toggle { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
+.password-toggle[aria-pressed="true"] { color: var(--accent); }
+@media (max-width: 420px) { .logout-label { display: none; } }
+
+/* ---------- home dashboard ---------- */
+.eyebrow { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.eyebrow.accent { color: var(--accent); }
+
+.card-hero {
+    position: relative;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+        var(--surface);
+}
+[dir="rtl"] .card-hero {
+    background:
+        radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+        var(--surface);
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 50% { opacity: 0.3; transform: scale(0.8); } }
+
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.week-dot {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px dashed var(--border);
+    color: var(--accent-ink);
+}
+.week-label { font-size: 0.75rem; color: var(--muted); }
+.week-day.planned .week-dot { border: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); }
+.week-day.missed .week-dot { border: 2px solid color-mix(in srgb, var(--muted) 45%, transparent); }
+.week-day.done .week-dot { border: 0; background: var(--accent); }
+.week-day.today .week-label { color: var(--text); font-weight: 800; }
+.week-day.today .week-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.stat-left { text-align: start; align-items: flex-start; gap: 6px; }
+.stat-left strong { font-size: 1.8rem; line-height: 1; }
+
+.quick-link { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.quick-link .icon-chevron { color: var(--muted); }
+
+/* ---------- skeleton loading ---------- */
+.skeleton {
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%) 0 0 / 200% 100%;
+    animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---------- workout extras ---------- */
+.done-badge {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 6px;
+    border-radius: 50%;
+    color: var(--accent-ink);
+    background: var(--accent);
+    box-shadow: 0 0 40px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.rest-bar {
+    --progress: 1;
+    position: fixed;
+    inset-inline: 12px;
+    bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 10px);
+    z-index: 15;
+    max-width: 536px;
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
+    border-radius: var(--radius);
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--accent) 18%, transparent) calc(var(--progress) * 100%), transparent 0),
+        var(--surface);
+    box-shadow: var(--shadow);
+}
+[dir="rtl"] .rest-bar {
+    background:
+        linear-gradient(270deg, color-mix(in srgb, var(--accent) 18%, transparent) calc(var(--progress) * 100%), transparent 0),
+        var(--surface);
+}
+.rest-bar[hidden] { display: none; }
+.rest-info { display: flex; align-items: center; gap: 10px; color: var(--accent); }
+.rest-time { font-size: 1.9rem; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; direction: ltr; }
+.rest-actions { display: flex; gap: 6px; }
+.rest-actions .icon-btn { min-width: 44px; font-weight: 700; }
+.rest-done { animation: restDone 0.5s ease 3; border-color: var(--accent); }
+@keyframes restDone { 50% { transform: scale(1.03); } }
+
+/* the rest bar must not cover the last buttons of the page */
+section:has(> .rest-bar:not([hidden])) { padding-bottom: 84px; }
+
+/* ---------- PR celebration ---------- */
+.pr-burst {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: rgb(0 0 0 / 0.45);
+    animation: fadeIn 0.2s ease;
+}
+.pr-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 32px;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    background: var(--surface);
+    text-align: center;
+    box-shadow: 0 0 60px color-mix(in srgb, var(--accent) 35%, transparent);
+    animation: popIn 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.pr-trophy {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+.pr-title { font-size: 2.6rem; font-weight: 700; line-height: 1; color: var(--accent); text-transform: uppercase; }
+.pr-exercise { font-weight: 700; }
+.confetti {
+    position: absolute;
+    top: -12px;
+    left: var(--x);
+    width: 8px;
+    height: 14px;
+    border-radius: 2px;
+    animation: fall var(--d) ease-in var(--delay) forwards;
+}
+@keyframes fall { to { transform: translateY(105vh) rotate(var(--r)); opacity: 0.8; } }
+@keyframes popIn { from { transform: scale(0.6); opacity: 0; } }
+@keyframes fadeIn { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton, .live-dot, .rest-done, .pr-card, .pr-burst { animation: none; }
+}
+
+/* ---------- muscle map ---------- */
+.home-layout { display: flex; flex-direction: column; gap: var(--gap); }
+
+@media (min-width: 1100px) {
+    .container:has(> .home-layout) { max-width: 1160px; }
+    .home-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+    }
+    .home-aside { position: sticky; top: 88px; }
+}
+
+.muscle-figure {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+    perspective: 800px;
+}
+.body-svg {
+    width: min(260px, 70vw);
+    height: auto;
+    overflow: visible;
+    transition: transform 0.18s ease-in, opacity 0.18s ease-in;
+    filter: drop-shadow(0 10px 30px color-mix(in srgb, var(--accent) 12%, transparent));
+    animation: breathe 4.5s ease-in-out infinite;
+}
+.muscle-figure.flipping .body-svg { animation: none; transform: rotateY(90deg); opacity: 0.2; }
+@keyframes breathe { 50% { transform: scale(1.012); } }
+
+.body-base path { fill: var(--surface-2); stroke: color-mix(in srgb, var(--border) 70%, transparent); stroke-width: 1; }
+
+.muscle {
+    --heat: 0.16;
+    fill: var(--accent);
+    fill-opacity: var(--heat);
+    stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+    stroke-width: 1;
+    cursor: pointer;
+    outline: none;
+    transition: fill-opacity 0.2s ease, filter 0.2s ease;
+}
+.muscle[data-level="1"] { --heat: 0.38; }
+.muscle[data-level="2"] { --heat: 0.62; }
+.muscle[data-level="3"] { --heat: 0.9; }
+.muscle:hover, .muscle:focus-visible { fill-opacity: calc(var(--heat) + 0.3); }
+.muscle[aria-pressed="true"] {
+    fill-opacity: 1;
+    stroke: var(--text);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 8px var(--accent));
+}
+.muscle-detail { fill: none; stroke: var(--surface-2); stroke-width: 1.6; stroke-linecap: round; pointer-events: none; }
+
+.heat-legend { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.heat-swatch {
+    width: 18px;
+    height: 10px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+}
+.heat-swatch[data-level="1"] { background: color-mix(in srgb, var(--accent) 38%, var(--surface-2)); }
+.heat-swatch[data-level="2"] { background: color-mix(in srgb, var(--accent) 62%, var(--surface-2)); }
+.heat-swatch[data-level="3"] { background: color-mix(in srgb, var(--accent) 90%, var(--surface-2)); }
+
+.muscle-details { min-height: 60px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .body-svg { animation: none; transition: none; }
+}
+
+/* ---------- 3D muscle map ---------- */
+.muscle-figure.is-3d { padding: 0; perspective: none; }
+.body3d { position: relative; width: 100%; max-width: 380px; margin-inline: auto; }
+.body3d-canvas { display: block; cursor: grab; touch-action: pan-y; }
+.body3d-canvas:active { cursor: grabbing; }
+.body3d::after { /* soft lime floor glow under the figure */
+    content: "";
+    position: absolute;
+    inset-inline: 20%;
+    bottom: 2%;
+    height: 14%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), transparent);
+    pointer-events: none;
+    z-index: -1;
+}
