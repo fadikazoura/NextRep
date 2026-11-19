@@ -3,109 +3,88 @@ import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { api, ApiError, session } from '../api.js';
 import { hasProfile, resetProfileStatus } from '../profile-status.js';
+import { clearCurrentUser } from '../current-user.js';
+import { phoneField } from '../phone-field.js';
 
 export function loginView({ notice } = {}) {
-    return authForm({
+    const login = h('input', { id: 'login', type: 'text', autocomplete: 'username', autocapitalize: 'none', required: true });
+    const password = passwordInput('current-password');
+    return authPage({
         title: t('auth.loginTitle'),
         submitLabel: t('auth.login'),
-        switchText: t('auth.noAccount'),
-        switchLabel: t('auth.register'),
-        switchHref: '#/register',
         notice,
-        onSubmit: (credentials) => logIn(credentials),
+        fields: [
+            field('login', t('auth.emailOrUsername'), login),
+            field('password', t('auth.password'), passwordField(password)),
+        ],
+        footer: h('p', { class: 'muted small center' }, `${t('auth.noAccount')} `, h('a', { href: '#/register' }, t('auth.register'))),
+        onSubmit: () => logIn(login.value.trim(), password.value),
     });
 }
 
 export function registerView() {
-    return authForm({
+    const username = h('input', {
+        id: 'username', type: 'text', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false',
+        minlength: 3, maxlength: 20, pattern: '[A-Za-z0-9._]{3,20}', required: true,
+    });
+    const email = h('input', { id: 'email', type: 'email', autocomplete: 'email', required: true });
+    const phone = phoneField('phone', null);
+    const password = passwordInput('new-password');
+    return authPage({
         title: t('auth.registerTitle'),
         submitLabel: t('auth.register'),
-        switchText: t('auth.haveAccount'),
-        switchLabel: t('auth.login'),
-        switchHref: '#/login',
-        passwordHint: t('auth.passwordHint'),
-        onSubmit: async (credentials) => {
-            await api('/api/auth/register', { method: 'POST', body: credentials, authenticated: false });
-            await logIn(credentials);
+        fields: [
+            field('username', t('account.username'), username, t('account.usernameHint')),
+            field('email', t('auth.email'), email),
+            field('phone', t('account.phoneOptional'), phone.el),
+            field('password', t('auth.password'), passwordField(password), t('auth.passwordHint')),
+        ],
+        footer: h('p', { class: 'muted small center' }, `${t('auth.haveAccount')} `, h('a', { href: '#/login' }, t('auth.login'))),
+        onSubmit: async () => {
+            await api('/api/auth/register', {
+                method: 'POST',
+                authenticated: false,
+                body: {
+                    username: username.value.trim(),
+                    email: email.value.trim(),
+                    phone: phone.value() || null,
+                    password: password.value,
+                },
+            });
+            await logIn(email.value.trim(), password.value);
         },
     });
 }
 
-async function logIn(credentials) {
-    const { accessToken } = await api('/api/auth/login', { method: 'POST', body: credentials, authenticated: false });
+async function logIn(login, password) {
+    const { accessToken } = await api('/api/auth/login', { method: 'POST', body: { login, password }, authenticated: false });
     session.save(accessToken);
     resetProfileStatus();
+    clearCurrentUser();
     location.hash = (await hasProfile()) ? '#/' : '#/profile';
 }
 
-function authForm({ title, submitLabel, switchText, switchLabel, switchHref, passwordHint, notice, onSubmit }) {
-    const email = h('input', { id: 'email', type: 'email', autocomplete: 'email', required: true });
-    const password = h('input', {
-        id: 'password',
-        type: 'password',
-        autocomplete: switchHref === '#/login' ? 'new-password' : 'current-password',
-        minlength: 8,
-        required: true,
-    });
-    const emailError = h('p', { class: 'field-error', hidden: true });
-    const passwordError = h('p', { class: 'field-error', hidden: true });
-    const formError = h('p', { class: 'form-error', role: 'alert', hidden: true });
-    const submit = h('button', { class: 'btn btn-primary btn-block', type: 'submit' }, submitLabel);
+/* ---------- building blocks ---------- */
 
-    const showErrors = (error) => {
-        const fields = error instanceof ApiError ? error.fieldErrors : {};
-        emailError.hidden = !fields.email;
-        emailError.textContent = fields.email ?? '';
-        passwordError.hidden = !fields.password;
-        passwordError.textContent = fields.password ?? '';
-        if (Object.keys(fields).length === 0) {
-            formError.hidden = false;
-            formError.textContent = messageFor(error);
-        }
-    };
+/** A labelled input with a hint and an error line; the error is found by the input's id. */
+function field(id, label, control, hint) {
+    return h('div', { class: 'field', 'data-field': id },
+        h('label', { for: id }, label),
+        control,
+        hint ? h('p', { class: 'muted small' }, hint) : null,
+        h('p', { class: 'field-error', hidden: true }));
+}
 
-    const form = h('form', {
-            class: 'card stack',
-            novalidate: true,
-            onsubmit: async (event) => {
-                event.preventDefault();
-                formError.hidden = true;
-                emailError.hidden = true;
-                passwordError.hidden = true;
-                submit.disabled = true;
-                try {
-                    await onSubmit({ email: email.value.trim(), password: password.value });
-                } catch (error) {
-                    showErrors(error);
-                } finally {
-                    submit.disabled = false;
-                }
-            },
-        },
-        h('h2', {}, title),
-        notice ? h('p', { class: 'form-error' }, notice) : null,
-        h('div', { class: 'field' }, h('label', { for: 'email' }, t('auth.email')), email, emailError),
-        h('div', { class: 'field' },
-            h('label', { for: 'password' }, t('auth.password')),
-            passwordField(password),
-            passwordHint ? h('p', { class: 'muted small' }, passwordHint) : null,
-            passwordError),
-        formError,
-        submit,
-        h('p', { class: 'muted small center' }, `${switchText} `, h('a', { href: switchHref }, switchLabel)),
-    );
-
-    return h('section', { class: 'stack' },
-        h('div', { class: 'hero stack' },
-            h('div', { class: 'brand' }, 'Next', h('span', {}, 'Rep')),
-            h('p', { class: 'muted' }, t('app.tagline'))),
-        form);
+function passwordInput(autocomplete) {
+    return h('input', { id: 'password', type: 'password', autocomplete, minlength: 8, required: true });
 }
 
 /** Wraps the password input with an eye button that toggles between hidden and visible text. */
-function passwordField(input) {
-    const toggle = h('button', { type: 'button', class: 'password-toggle', 'aria-pressed': 'false',
-        'aria-controls': input.id, 'aria-label': t('auth.showPassword') }, icon('eye'));
+export function passwordField(input) {
+    const toggle = h('button', {
+        type: 'button', class: 'password-toggle', 'aria-pressed': 'false',
+        'aria-controls': input.id, 'aria-label': t('auth.showPassword'),
+    }, icon('eye'));
     toggle.addEventListener('click', () => {
         const show = input.type === 'password';
         input.type = show ? 'text' : 'password';
@@ -115,6 +94,57 @@ function passwordField(input) {
         input.focus();
     });
     return h('div', { class: 'password-wrap' }, input, toggle);
+}
+
+/** Shows server errors next to their fields ({ errors: { username: '...' } }), or as one message. */
+export function showFormErrors(form, formError, error) {
+    const fields = error instanceof ApiError ? error.fieldErrors : {};
+    let shownNextToField = false;
+    form.querySelectorAll('[data-field]').forEach((wrapper) => {
+        const message = fields[wrapper.dataset.field];
+        const line = wrapper.querySelector('.field-error');
+        line.hidden = !message;
+        line.textContent = message ?? '';
+        if (message) shownNextToField = true;
+    });
+    formError.hidden = shownNextToField;
+    formError.textContent = shownNextToField ? '' : messageFor(error);
+}
+
+export function clearFormErrors(form, formError) {
+    form.querySelectorAll('.field-error').forEach((line) => { line.hidden = true; });
+    formError.hidden = true;
+}
+
+function authPage({ title, submitLabel, notice, fields, footer, onSubmit }) {
+    const formError = h('p', { class: 'form-error', role: 'alert', hidden: true });
+    const submit = h('button', { class: 'btn btn-primary btn-block', type: 'submit' }, submitLabel);
+    const form = h('form', { class: 'card stack', novalidate: true },
+        h('h2', {}, title),
+        notice ? h('p', { class: 'form-error' }, notice) : null,
+        fields,
+        formError,
+        submit,
+        footer);
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFormErrors(form, formError);
+        submit.disabled = true;
+        try {
+            await onSubmit();
+        } catch (error) {
+            showFormErrors(form, formError, error);
+        } finally {
+            submit.disabled = false;
+        }
+    });
+
+    return h('section', { class: 'stack' },
+        h('div', { class: 'hero stack' },
+            h('div', { class: 'brand' }, 'Next', h('span', {}, 'Rep')),
+            h('p', { class: 'muted' }, t('app.tagline'))),
+        form);
 }
 
 function messageFor(error) {

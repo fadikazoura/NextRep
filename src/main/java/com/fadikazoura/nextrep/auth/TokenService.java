@@ -18,6 +18,9 @@ public class TokenService {
 
     private static final String ISSUER = "nextrep";
 
+    /** Must match the user's current token version, otherwise the token is rejected (see TokenVersionValidator). */
+    public static final String TOKEN_VERSION_CLAIM = "ver";
+
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
 
@@ -29,6 +32,7 @@ public class TokenService {
                 .subject(user.getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plus(jwtProperties.ttl()))
+                .claim(TOKEN_VERSION_CLAIM, user.getTokenVersion())
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

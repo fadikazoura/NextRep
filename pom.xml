@@ -19,6 +19,12 @@
 	</properties>
 
 	<dependencies>
+		<!-- Parsing and validating international phone numbers -->
+		<dependency>
+			<groupId>com.googlecode.libphonenumber</groupId>
+			<artifactId>libphonenumber</artifactId>
+			<version>9.0.34</version>
+		</dependency>
 		<!-- Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

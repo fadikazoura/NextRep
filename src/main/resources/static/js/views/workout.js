@@ -6,6 +6,7 @@ import { exerciseName } from './exercise-guide.js';
 import { createRestTimer } from '../rest-timer.js';
 import { celebratePr, estimateOneRepMax } from '../celebrate.js';
 import { invalidateMuscleVolume } from './muscle-map.js';
+import { maybePromptRating } from './feedback.js';
 
 const BASE = '/api/users/me/workouts';
 
@@ -286,6 +287,7 @@ function finishActions(workout, root, stopTimer) {
             stopTimer();
             invalidateMuscleVolume();
             root.replaceChildren(summary(done));
+            maybePromptRating();
         } catch (e) {
             if (e instanceof ApiError && e.status === 401) return;
             finish.disabled = false;

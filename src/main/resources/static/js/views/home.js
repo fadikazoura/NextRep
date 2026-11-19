@@ -4,6 +4,7 @@ import { api, ApiError } from '../api.js';
 import { hasProfile } from '../profile-status.js';
 import { icon } from '../icons.js';
 import { muscleMapCard } from './muscle-map.js';
+import { currentUser } from '../current-user.js';
 
 const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']; // JS getDay() order
 
@@ -18,8 +19,8 @@ async function getOrNull(path) {
 
 /** Home answers one question first: "what should I do right now?" — then shows how the week is going. */
 export async function homeView() {
-    const [me, profileReady] = await Promise.all([api('/api/users/me'), hasProfile()]);
-    const name = me.email.split('@')[0];
+    const [me, profileReady] = await Promise.all([currentUser(), hasProfile()]);
+    const name = me.username;
 
     const header = h('div', { class: 'stack', style: 'gap: 2px' },
         h('p', { class: 'muted small eyebrow' }, todayLabel()),
