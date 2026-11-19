@@ -16,3 +16,10 @@ nextrep:
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-in-production-0123456789}
     ttl: 1h
+  ai:
+    gemini:
+      # Read from the environment; empty means "AI disabled, use the default generator".
+      api-key: ${GEMINI_API_KEY:}
+      model: gemini-3.8-flash
+      base-url: https://generativelanguage.googleapis.com
+      timeout: 30s
