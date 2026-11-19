@@ -24,6 +24,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         // API documentation is public; the endpoints it describes still require a token.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Health checks for the hosting platform; they expose only UP/DOWN, no details.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();

@@ -1,0 +1,21 @@
+# Production profile: activate with SPRING_PROFILES_ACTIVE=prod.
+# Secrets have NO defaults here on purpose: if one is missing, the app refuses to start.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Small pool: free-tier databases allow only a few connections.
+      maximum-pool-size: 5
+
+server:
+  # Most platforms tell the app which port to listen on.
+  port: ${PORT:8080}
+  # Behind the platform's HTTPS proxy: trust X-Forwarded-* headers so generated URLs
+  # (for example Swagger's server URL) use https and the public host name.
+  forward-headers-strategy: framework
+
+nextrep:
+  jwt:
+    secret: ${JWT_SECRET}
