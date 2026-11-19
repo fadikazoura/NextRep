@@ -1,6 +1,8 @@
 import { h } from '../dom.js';
+import { icon } from '../icons.js';
 import { t, enumLabel } from '../i18n.js';
 import { api, ApiError } from '../api.js';
+import { exerciseName } from './exercise-guide.js';
 
 async function loadPlan() {
     try {
@@ -36,7 +38,7 @@ export async function planView() {
 
     const actions = (hasPlan) => h('div', { class: 'stack', style: 'gap: 8px' },
         h('button', { class: 'btn btn-primary btn-block', type: 'button', 'data-generate': true,
-            onclick: (e) => generate(true, e.currentTarget) }, `✨ ${hasPlan ? t('plan.regenerateAi') : t('plan.generateAi')}`),
+            onclick: (e) => generate(true, e.currentTarget) }, icon('sparkles', { size: 18 }), h('span', {}, hasPlan ? t('plan.regenerateAi') : t('plan.generateAi'))),
         h('button', { class: 'btn btn-block', type: 'button', 'data-generate': true,
             onclick: (e) => generate(false, e.currentTarget) }, t('plan.generateDefault')),
         hasPlan ? h('p', { class: 'muted small center' }, t('plan.replaceWarning')) : null,
@@ -63,7 +65,8 @@ function planHeader(plan) {
     return h('div', { class: 'stack', style: 'gap: 6px' },
         h('div', { class: 'row' },
             h('h1', {}, plan.name),
-            h('span', { class: `badge ${plan.source === 'AI' ? 'badge-accent' : ''}` },
+            h('span', { class: `badge with-icon ${plan.source === 'AI' ? 'badge-accent' : ''}` },
+                plan.source === 'AI' ? icon('sparkles', { size: 14 }) : null,
                 plan.source === 'AI' ? t('plan.sourceAi') : t('plan.sourceDefault'))),
         h('p', { class: 'muted small' }, t('plan.daysPerWeek', { count: plan.days.length })));
 }
@@ -78,7 +81,7 @@ function dayCard(day) {
         h('ol', { class: 'exercise-list' },
             day.exercises.map((ex) => h('li', {},
                 h('div', {},
-                    h('div', { class: 'ex-name' }, ex.name),
+                    exerciseName(ex.exerciseId, ex.name),
                     h('div', { class: 'muted small' }, enumLabel(ex.muscleGroup))),
                 h('div', { class: 'ex-scheme' },
                     ex.repMin === ex.repMax ? `${ex.sets} × ${ex.repMin}` : `${ex.sets} × ${ex.repMin}–${ex.repMax}`)))));

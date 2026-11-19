@@ -1,4 +1,5 @@
-import { h, spinner, toast } from './dom.js';
+import { h, skeleton, toast } from './dom.js';
+import { icon } from './icons.js';
 import { getLang, setLang, t } from './i18n.js';
 import { ApiError, session } from './api.js';
 import { loginView, registerView } from './views/auth.js';
@@ -21,11 +22,11 @@ const ROUTES = {
 };
 
 const TABS = [
-    { path: '/', icon: '⌂', key: 'nav.home' },
-    { path: '/plan', icon: '📅', key: 'nav.plan' },
-    { path: '/workout', icon: '🏋️', key: 'nav.workout' },
-    { path: '/progress', icon: '📈', key: 'nav.progress' },
-    { path: '/profile', icon: '👤', key: 'nav.profile' },
+    { path: '/', icon: 'home', key: 'nav.home' },
+    { path: '/plan', icon: 'calendar', key: 'nav.plan' },
+    { path: '/workout', icon: 'dumbbell', key: 'nav.workout' },
+    { path: '/progress', icon: 'chart', key: 'nav.progress' },
+    { path: '/profile', icon: 'user', key: 'nav.profile' },
 ];
 
 const main = document.getElementById('view');
@@ -54,7 +55,7 @@ async function render() {
     }
 
     renderChrome(path);
-    main.replaceChildren(spinner());
+    main.replaceChildren(skeleton());
     try {
         const notice = pendingNotice;
         pendingNotice = null;
@@ -76,7 +77,7 @@ async function render() {
 function renderChrome(path) {
     const theme = document.documentElement.getAttribute('data-theme');
     const themeButton = document.getElementById('theme-toggle');
-    themeButton.textContent = theme === 'dark' ? '☀' : '☾';
+    themeButton.replaceChildren(icon(theme === 'dark' ? 'sun' : 'moon'));
     themeButton.setAttribute('aria-label', theme === 'dark' ? t('theme.toLight') : t('theme.toDark'));
 
     const langButton = document.getElementById('lang-toggle');
@@ -85,7 +86,8 @@ function renderChrome(path) {
 
     const logout = document.getElementById('logout');
     logout.hidden = !session.loggedIn;
-    logout.textContent = t('auth.logout');
+    logout.replaceChildren(icon('logout', { size: 18 }), h('span', { class: 'logout-label' }, t('auth.logout')));
+    logout.setAttribute('aria-label', t('auth.logout'));
 
     const tabbar = document.getElementById('tabbar');
     tabbar.hidden = !session.loggedIn;
@@ -93,7 +95,7 @@ function renderChrome(path) {
             href: `#${tab.path}`,
             'aria-current': tab.path === path ? 'page' : null,
         },
-        h('span', { class: 'tab-icon', 'aria-hidden': 'true' }, tab.icon),
+        h('span', { class: 'tab-icon', 'aria-hidden': 'true' }, icon(tab.icon, { size: 22 })),
         h('span', {}, t(tab.key)))));
 }
 
@@ -132,3 +134,10 @@ window.addEventListener('session-expired', () => {
 window.addEventListener('langchange', render);
 window.addEventListener('hashchange', render);
 render();
+
+// Installable app (PWA): the service worker keeps the app shell available offline.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => { /* the app works without it */ });
+    });
+}

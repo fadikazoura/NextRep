@@ -1,4 +1,5 @@
 import { h, toast } from '../dom.js';
+import { icon } from '../icons.js';
 import { t, enumLabel } from '../i18n.js';
 import { api, ApiError } from '../api.js';
 import { lineChart } from '../chart.js';
@@ -69,7 +70,7 @@ function recordCard(record) {
                 : h('p', { class: 'muted small' }, t('progress.needMore')));
     };
 
-    const toggle = h('button', { class: 'btn btn-sm btn-ghost', type: 'button', 'aria-expanded': 'false' }, `📈 ${t('progress.chart')}`);
+    const toggle = h('button', { class: 'btn btn-sm btn-ghost', type: 'button', 'aria-expanded': 'false' }, icon('chart', { size: 18 }), t('progress.chart'));
     toggle.addEventListener('click', async () => {
         const open = chartBox.hidden;
         chartBox.hidden = !open;

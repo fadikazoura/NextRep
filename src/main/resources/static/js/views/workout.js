@@ -1,6 +1,11 @@
 import { h, toast } from '../dom.js';
+import { icon } from '../icons.js';
 import { t, enumLabel } from '../i18n.js';
 import { api, ApiError } from '../api.js';
+import { exerciseName } from './exercise-guide.js';
+import { createRestTimer } from '../rest-timer.js';
+import { celebratePr, estimateOneRepMax } from '../celebrate.js';
+import { invalidateMuscleVolume } from './muscle-map.js';
 
 const BASE = '/api/users/me/workouts';
 
@@ -76,24 +81,29 @@ async function pickWorkout() {
 /* ---------- workout in progress ---------- */
 
 async function activeWorkout(workout, notice) {
-    const recommendations = workout.planDayId
-        ? await getOrNull(`/api/users/me/plan/days/${workout.planDayId}/recommendations`)
-        : null;
+    const [recommendations, records] = await Promise.all([
+        workout.planDayId ? getOrNull(`/api/users/me/plan/days/${workout.planDayId}/recommendations`) : null,
+        api('/api/users/me/records').catch(() => []),
+    ]);
+
+    // Best results so far, per exercise, so a new personal record can be celebrated the moment it's logged.
+    const bests = new Map(records.map((r) => [r.exerciseId, {
+        heaviest: Number(r.heaviest?.weightKg ?? 0),
+        e1rm: Number(r.estimatedOneRepMaxKg ?? 0),
+    }]));
+    const restTimer = createRestTimer();
 
     const root = h('section', { class: 'stack' });
     const cards = h('div', { class: 'stack' });
     const shownExercises = new Set();
-    let lastSetAt = workout.sets.length ? Date.now() : null;
 
-    // Header with a live timer: total time + rest since the last logged set.
-    const clock = h('span', { class: 'workout-clock' });
+    // Header with a live clock of the total workout time.
+    const clockTime = h('span', {});
+    const clock = h('span', { class: 'workout-clock with-icon' }, icon('timer', { size: 18 }), clockTime);
     const tick = () => {
         if (!root.isConnected && root.dataset.mounted) return clearInterval(timer);
         root.dataset.mounted = root.isConnected ? '1' : '';
-        const total = formatDuration(Date.now() - Date.parse(workout.startedAt));
-        clock.textContent = lastSetAt
-            ? `⏱ ${total} · ${t('workout.rest')} ${formatDuration(Date.now() - lastSetAt)}`
-            : `⏱ ${total}`;
+        clockTime.textContent = formatDuration(Date.now() - Date.parse(workout.startedAt));
     };
     const timer = setInterval(tick, 1000);
     tick();
@@ -103,7 +113,10 @@ async function activeWorkout(workout, notice) {
         shownExercises.add(exerciseId);
         cards.append(exerciseCard({
             workout, exerciseId, name, recommendation,
-            onLogged: () => { lastSetAt = Date.now(); tick(); },
+            onLogged: (set) => {
+                restTimer.start();
+                checkForRecord(set, name, bests);
+            },
         }));
     };
 
@@ -117,8 +130,26 @@ async function activeWorkout(workout, notice) {
         notice ? h('p', { class: 'form-error', role: 'status' }, notice) : null,
         cards,
         addExercisePicker((exercise) => addCard(exercise.id, exercise.name, null)),
-        finishActions(workout, root, () => clearInterval(timer)));
+        finishActions(workout, root, () => { clearInterval(timer); restTimer.stop(); }),
+        restTimer.el);
     return root;
+}
+
+function checkForRecord(set, name, bests) {
+    const weight = Number(set.weightKg);
+    const e1rm = estimateOneRepMax(weight, set.reps);
+    const best = bests.get(set.exerciseId);
+    if (!best) {
+        bests.set(set.exerciseId, { heaviest: weight, e1rm }); // first time ever: that's a baseline, not a PR
+        return;
+    }
+    if (weight > best.heaviest) {
+        celebratePr(name, t('pr.heaviest', { weight: formatKg(weight), reps: set.reps }));
+    } else if (e1rm > best.e1rm + 0.01) {
+        celebratePr(name, t('pr.e1rm', { e1rm: formatKg(Math.round(e1rm * 10) / 10) }));
+    }
+    best.heaviest = Math.max(best.heaviest, weight);
+    best.e1rm = Math.max(best.e1rm, e1rm);
 }
 
 function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
@@ -151,7 +182,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
             h('button', {
                 class: 'icon-btn icon-btn-sm', type: 'button', 'aria-label': t('workout.deleteSet'),
                 onclick: () => removeSet(set),
-            }, '✕'))));
+            }, icon('close', { size: 16 })))));
     };
 
     const removeSet = async (set) => {
@@ -181,7 +212,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
             });
             workout.sets.push(set);
             renderSets();
-            onLogged();
+            onLogged(set);
         } catch (e) {
             if (e instanceof ApiError && e.status === 401) return;
             error.hidden = false;
@@ -195,7 +226,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
 
     renderSets();
     return h('article', { class: 'card stack', style: 'gap: 10px' },
-        h('div', { class: 'row' }, h('h3', {}, name), h('span', { class: 'spacer' }), counter),
+        h('div', { class: 'row' }, h('h3', {}, exerciseName(exerciseId, name, 'ex-title')), h('span', { class: 'spacer' }), counter),
         recommendation ? recommendationLine(recommendation) : null,
         setList,
         form,
@@ -216,7 +247,7 @@ function recommendationLine(rec) {
 
 function addExercisePicker(onPick) {
     const wrapper = h('div', { class: 'stack', style: 'gap: 8px' });
-    const open = h('button', { class: 'btn btn-block btn-ghost', type: 'button' }, `＋ ${t('workout.addExercise')}`);
+    const open = h('button', { class: 'btn btn-block btn-ghost', type: 'button' }, icon('plus', { size: 18 }), t('workout.addExercise'));
     open.addEventListener('click', async () => {
         open.disabled = true;
         try {
@@ -246,13 +277,14 @@ function finishActions(workout, root, stopTimer) {
     const error = h('p', { class: 'form-error', role: 'alert', hidden: true });
     let discardArmed = false;
 
-    const finish = h('button', { class: 'btn btn-primary btn-block', type: 'button' }, `✓ ${t('workout.finish')}`);
+    const finish = h('button', { class: 'btn btn-primary btn-block', type: 'button' }, icon('check', { size: 18 }), t('workout.finish'));
     finish.addEventListener('click', async () => {
         finish.disabled = true;
         error.hidden = true;
         try {
             const done = await api(`${BASE}/${workout.id}/complete`, { method: 'POST' });
             stopTimer();
+            invalidateMuscleVolume();
             root.replaceChildren(summary(done));
         } catch (e) {
             if (e instanceof ApiError && e.status === 401) return;
@@ -295,7 +327,7 @@ function summary(workout) {
 
     return h('div', { class: 'stack' },
         h('div', { class: 'center stack', style: 'gap: 4px' },
-            h('div', { class: 'tile-icon', style: 'font-size: 2.5rem' }, '🎉'),
+            h('div', { class: 'done-badge' }, icon('trophy', { size: 40 })),
             h('h1', {}, t('workout.doneTitle')),
             h('p', { class: 'muted' }, t('workout.doneHint'))),
         h('div', { class: 'grid-2' },

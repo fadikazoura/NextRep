@@ -47,3 +47,10 @@ export function hideToast() {
     clearTimeout(toastTimer);
     document.getElementById('toast').hidden = true;
 }
+
+/** Grey placeholder blocks shaped like a page, shown while it loads (feels faster than a spinner). */
+export function skeleton() {
+    const block = (height, width = '100%') => h('div', { class: 'skeleton', style: `height:${height}px;width:${width}` });
+    return h('div', { class: 'stack', 'aria-busy': 'true', 'aria-label': 'Loading' },
+        block(14, '35%'), block(30, '60%'), block(150), block(96), h('div', { class: 'grid-2' }, block(76), block(76)));
+}

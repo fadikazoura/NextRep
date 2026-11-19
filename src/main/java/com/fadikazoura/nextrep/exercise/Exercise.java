@@ -36,4 +36,17 @@ public class Exercise {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ExerciseEquipment equipment;
+
+    /** How-to steps, one per line. */
+    @Column(length = 600)
+    private String instructionsEn;
+
+    @Column(length = 600)
+    private String instructionsHe;
+
+    @Column(length = 300)
+    private String commonMistakeEn;
+
+    @Column(length = 300)
+    private String commonMistakeHe;
 }

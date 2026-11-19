@@ -9,11 +9,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -31,6 +35,9 @@ class ExerciseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ExerciseRepository exerciseRepository;
 
     private String token;
 
@@ -63,6 +70,39 @@ class ExerciseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name",
                         contains("Dumbbell Bench Press", "Dumbbell Fly", "Incline Dumbbell Press")));
+    }
+
+    @Test
+    @Transactional
+    void everyExerciseHasAGuideInBothLanguages() {
+        assertThat(exerciseRepository.findAll()).hasSize(58).allSatisfy(exercise -> {
+            assertThat(exercise.getInstructionsEn()).as(exercise.getName()).isNotBlank();
+            assertThat(exercise.getInstructionsHe()).as(exercise.getName()).isNotBlank();
+            assertThat(exercise.getCommonMistakeEn()).as(exercise.getName()).isNotBlank();
+            assertThat(exercise.getCommonMistakeHe()).as(exercise.getName()).isNotBlank();
+        });
+    }
+
+    @Test
+    void returnsGuideWithStepsMistakeAndVideoLink() throws Exception {
+        String list = mockMvc.perform(get(URL).header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString();
+        List<Integer> ids = JsonPath.read(list, "$[?(@.name == 'Romanian Deadlift')].id");
+        Integer id = ids.getFirst();
+
+        mockMvc.perform(get(URL + "/" + id + "/guide").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Romanian Deadlift"))
+                .andExpect(jsonPath("$.en.steps", hasSize(3)))
+                .andExpect(jsonPath("$.he.steps", hasSize(3)))
+                .andExpect(jsonPath("$.en.commonMistake").isNotEmpty())
+                .andExpect(jsonPath("$.videoSearchUrl", containsString("youtube.com/results?search_query=Romanian+Deadlift")));
+    }
+
+    @Test
+    void guideOfUnknownExerciseReturns404() throws Exception {
+        mockMvc.perform(get(URL + "/999999/guide").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 
     @Test

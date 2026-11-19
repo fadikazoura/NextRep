@@ -52,4 +52,16 @@ public interface WorkoutSetRepository extends JpaRepository<WorkoutSet, Long> {
             """)
     List<WorkoutSet> findCompletedSetsOfExercise(@Param("userId") Long userId,
                                                  @Param("exerciseId") Long exerciseId);
+
+    /** Completed sets per muscle group since a moment in time, counted by the database (GROUP BY). */
+    @Query("""
+            SELECT s.exercise.muscleGroup AS muscleGroup, COUNT(s) AS sets
+            FROM WorkoutSet s
+            JOIN s.session ws
+            WHERE ws.user.id = :userId
+              AND ws.completedAt IS NOT NULL
+              AND ws.startedAt >= :since
+            GROUP BY s.exercise.muscleGroup
+            """)
+    List<MuscleSetCount> countCompletedSetsPerMuscle(@Param("userId") Long userId, @Param("since") Instant since);
 }

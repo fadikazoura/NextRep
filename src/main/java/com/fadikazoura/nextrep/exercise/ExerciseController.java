@@ -26,4 +26,10 @@ public class ExerciseController {
     public ExerciseResponse getById(@PathVariable Long id) {
         return exerciseService.getById(id);
     }
+
+    /** How to perform the exercise: steps and the most common mistake, in English and Hebrew. */
+    @GetMapping("/{id}/guide")
+    public ExerciseGuideResponse guide(@PathVariable Long id) {
+        return exerciseService.getGuide(id);
+    }
 }

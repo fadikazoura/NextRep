@@ -142,6 +142,29 @@ class StatsIntegrationTest {
     }
 
     @Test
+    void countsCompletedSetsPerMuscleGroup() throws Exception {
+        String token = newUser();
+        long bench = exerciseId(token, "CHEST", "BARBELL");
+        long squat = exerciseId(token, "QUADS", "BARBELL");
+
+        long done = startWorkout(token);
+        addSet(token, done, bench, "60", 10);
+        addSet(token, done, bench, "60", 10);
+        addSet(token, done, squat, "80", 5);
+        complete(token, done);
+
+        long open = startWorkout(token); // not completed: must not count
+        addSet(token, open, squat, "80", 5);
+
+        mockMvc.perform(get("/api/users/me/muscles/volume").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$[?(@.muscleGroup == 'CHEST')].sets").value(org.hamcrest.Matchers.contains(2)))
+                .andExpect(jsonPath("$[?(@.muscleGroup == 'QUADS')].sets").value(org.hamcrest.Matchers.contains(1)))
+                .andExpect(jsonPath("$[?(@.muscleGroup == 'BACK')].sets").value(org.hamcrest.Matchers.contains(0)));
+    }
+
+    @Test
     void requiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/users/me/records"))
                 .andExpect(status().isUnauthorized());
