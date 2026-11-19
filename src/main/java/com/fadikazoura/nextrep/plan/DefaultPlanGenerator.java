@@ -6,7 +6,6 @@ import com.fadikazoura.nextrep.exercise.MovementType;
 import com.fadikazoura.nextrep.exercise.MuscleGroup;
 import com.fadikazoura.nextrep.plan.PlanBlueprint.DayBlueprint;
 import com.fadikazoura.nextrep.plan.PlanBlueprint.ExerciseSlot;
-import com.fadikazoura.nextrep.user.Equipment;
 import com.fadikazoura.nextrep.user.ExperienceLevel;
 import com.fadikazoura.nextrep.user.TrainingGoal;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,6 @@ import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +51,7 @@ public class DefaultPlanGenerator {
 
         List<DayOfWeek> days = input.trainingDays().stream().sorted().toList();
         Split split = Split.forDayCount(days.size());
-        Set<ExerciseEquipment> allowed = allowedEquipment(input.equipment());
+        Set<ExerciseEquipment> allowed = EquipmentAccess.allowedFor(input.equipment());
         List<ExerciseResponse> available = catalog.stream()
                 .filter(exercise -> allowed.contains(exercise.equipment()))
                 .toList();
@@ -135,14 +133,6 @@ public class DefaultPlanGenerator {
             case STRENGTH -> compound ? new int[]{4, 6} : new int[]{8, 12};
             case HYPERTROPHY -> compound ? new int[]{8, 12} : new int[]{10, 15};
             case ENDURANCE -> compound ? new int[]{12, 20} : new int[]{15, 20};
-        };
-    }
-
-    private static Set<ExerciseEquipment> allowedEquipment(Equipment equipment) {
-        return switch (equipment) {
-            case FULL_GYM -> EnumSet.allOf(ExerciseEquipment.class);
-            case DUMBBELLS_ONLY -> EnumSet.of(ExerciseEquipment.DUMBBELL, ExerciseEquipment.BODYWEIGHT);
-            case HOME -> EnumSet.of(ExerciseEquipment.BODYWEIGHT);
         };
     }
 
