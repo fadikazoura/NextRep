@@ -157,3 +157,5 @@ messages for validation errors.
 ## Author
 
 **Fadi Kazoura** — Software Engineering student, Braude College of Engineering
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Fadi%20Kazoura-0A66C2?logo=linkedin)](https://www.linkedin.com/in/fadi-kazoura-7a525335b)
