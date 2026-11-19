@@ -1,6 +1,7 @@
 package com.fadikazoura.nextrep.common;
 
 import com.fadikazoura.nextrep.auth.InvalidCredentialsException;
+import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
 import com.fadikazoura.nextrep.user.EmailAlreadyUsedException;
 import com.fadikazoura.nextrep.user.InvalidProfileException;
 import com.fadikazoura.nextrep.user.ProfileNotFoundException;
@@ -11,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,6 +43,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidProfileException.class)
     ProblemDetail handleInvalidProfile(InvalidProfileException ex) {
         return problem(HttpStatus.BAD_REQUEST, "Invalid profile", ex.getMessage());
+    }
+
+    @ExceptionHandler(ExerciseNotFoundException.class)
+    ProblemDetail handleExerciseNotFound(ExerciseNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "Exercise not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid parameter",
+                "Invalid value for parameter '" + ex.getName() + "'");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
