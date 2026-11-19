@@ -2,6 +2,7 @@ package com.fadikazoura.nextrep.common;
 
 import com.fadikazoura.nextrep.auth.InvalidCredentialsException;
 import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
+import com.fadikazoura.nextrep.plan.PlanNotFoundException;
 import com.fadikazoura.nextrep.user.EmailAlreadyUsedException;
 import com.fadikazoura.nextrep.user.InvalidProfileException;
 import com.fadikazoura.nextrep.user.ProfileNotFoundException;
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExerciseNotFoundException.class)
     ProblemDetail handleExerciseNotFound(ExerciseNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Exercise not found", ex.getMessage());
+    }
+
+    @ExceptionHandler(PlanNotFoundException.class)
+    ProblemDetail handlePlanNotFound(PlanNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "Plan not found", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
