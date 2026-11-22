@@ -2,6 +2,7 @@ package com.fadikazoura.nextrep.common;
 import com.fadikazoura.nextrep.account.IncorrectPasswordException;
 import com.fadikazoura.nextrep.account.InvalidAvatarException;
 import com.fadikazoura.nextrep.auth.InvalidCredentialsException;
+import com.fadikazoura.nextrep.auth.InvalidResetCodeException;
 import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
 import com.fadikazoura.nextrep.feedback.RatingNotFoundException;
 import com.fadikazoura.nextrep.feedback.TooManyMessagesException;
@@ -143,6 +144,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TooManyMessagesException.class)
     ProblemDetail handleTooManyMessages(TooManyMessagesException ex) {
         return problem(HttpStatus.TOO_MANY_REQUESTS, "Too many messages", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidResetCodeException.class)
+    ProblemDetail handleInvalidResetCode(InvalidResetCodeException ex) {
+        return fieldProblem(HttpStatus.BAD_REQUEST, "Invalid code", "code", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -3,6 +3,7 @@ import { icon } from './icons.js';
 import { getLang, setLang, t } from './i18n.js';
 import { ApiError, session } from './api.js';
 import { loginView, registerView } from './views/auth.js';
+import { forgotPasswordView } from './views/forgot-password.js';
 import { homeView } from './views/home.js';
 import { planView } from './views/plan.js';
 import { profileView } from './views/profile.js';
@@ -19,6 +20,7 @@ import { openContact, openRating } from './views/feedback.js';
 const ROUTES = {
     '/login': { view: loginView, public: true },
     '/register': { view: registerView, public: true },
+    '/forgot-password': { view: forgotPasswordView, public: true },
     '/': { view: homeView },
     '/plan': { view: planView, needsProfile: true },
     '/workout': { view: workoutView, needsProfile: true },

@@ -1,7 +1,11 @@
 package com.fadikazoura.nextrep.feedback;
 
+import com.fadikazoura.nextrep.user.User;
+import com.fadikazoura.nextrep.user.UserNotFoundException;
+import com.fadikazoura.nextrep.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +22,8 @@ public class FeedbackService {
 
     private final AppRatingRepository appRatingRepository;
     private final ContactMessageRepository contactMessageRepository;
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -39,6 +45,9 @@ public class FeedbackService {
         if (recent >= MESSAGES_PER_DAY) throw new TooManyMessagesException();
         ContactMessage saved = contactMessageRepository.save(new ContactMessage(userId, request.topic(), request.message().strip()));
         log.info("New contact message #{} ({}) from user {}", saved.getId(), saved.getTopic(), userId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+        events.publishEvent(new ContactMessageReceived(saved.getId(), user.getUsername(), user.getEmail(),
+                saved.getTopic(), saved.getMessage()));
     }
 
     private static String blankToNull(String text) {
