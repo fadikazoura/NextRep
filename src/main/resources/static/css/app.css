@@ -1067,3 +1067,19 @@ input:disabled { opacity: 0.65; cursor: not-allowed; }
 .segment[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
 .segment-badge { font-size: 0.75rem; opacity: 0.7; }
 #lang-toggle[hidden] { display: none; }
+
+/* ---------- forgot password ---------- */
+.forgot-link { align-self: flex-end; margin-top: -6px; }
+.code-input {
+    text-align: center;
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5em;
+    padding-inline-start: 0.5em; /* balance the trailing letter-spacing */
+    direction: ltr;
+}
+.link-btn:disabled { opacity: 0.6; cursor: default; text-decoration: none; }
+
+/* "hidden" must always win over display rules like .icon-btn { display: inline-flex } */
+[hidden] { display: none !important; }

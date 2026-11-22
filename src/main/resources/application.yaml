@@ -42,3 +42,12 @@ nextrep:
       model: gemini-3.1-flash-lite
       base-url: https://generativelanguage.googleapis.com
       timeout: 30s
+  mail:
+    # Read from the environment; empty means "don't send, write emails to the log".
+    brevo-api-key: ${BREVO_API_KEY:}
+    base-url: https://api.brevo.com
+    sender-email: nextrep.fitapp@gmail.com
+    sender-name: NextRep
+    # "Contact us" messages are forwarded here.
+    support-inbox: nextrep.fitapp@gmail.com
+    timeout: 10s

@@ -16,6 +16,7 @@ export function loginView({ notice } = {}) {
         fields: [
             field('login', t('auth.emailOrUsername'), login),
             field('password', t('auth.password'), passwordField(password)),
+            h('a', { class: 'small forgot-link', href: '#/forgot-password' }, t('reset.forgotLink')),
         ],
         footer: h('p', { class: 'muted small center' }, `${t('auth.noAccount')} `, h('a', { href: '#/register' }, t('auth.register'))),
         onSubmit: () => logIn(login.value.trim(), password.value),
@@ -67,7 +68,7 @@ async function logIn(login, password) {
 /* ---------- building blocks ---------- */
 
 /** A labelled input with a hint and an error line; the error is found by the input's id. */
-function field(id, label, control, hint) {
+export function field(id, label, control, hint) {
     return h('div', { class: 'field', 'data-field': id },
         h('label', { for: id }, label),
         control,
@@ -116,11 +117,12 @@ export function clearFormErrors(form, formError) {
     formError.hidden = true;
 }
 
-function authPage({ title, submitLabel, notice, fields, footer, onSubmit }) {
+export function authPage({ title, subtitle, submitLabel, notice, fields, footer, onSubmit }) {
     const formError = h('p', { class: 'form-error', role: 'alert', hidden: true });
     const submit = h('button', { class: 'btn btn-primary btn-block', type: 'submit' }, submitLabel);
     const form = h('form', { class: 'card stack', novalidate: true },
         h('h2', {}, title),
+        subtitle ? h('p', { class: 'muted small' }, subtitle) : null,
         notice ? h('p', { class: 'form-error' }, notice) : null,
         fields,
         formError,
