@@ -1125,3 +1125,27 @@ input:disabled { opacity: 0.65; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
     #view.view-in, .plate { animation: none; }
 }
+
+/* ---------- weekly progress ring ---------- */
+.week-head { align-items: center; }
+.week-hint { color: var(--accent); font-weight: 700; }
+.week-hint-done { color: #facc15; }
+.progress-ring { position: relative; display: grid; place-items: center; width: 76px; height: 76px; flex: none; }
+.progress-ring svg { transform: rotate(-90deg); overflow: visible; }
+.ring-track { fill: none; stroke: color-mix(in srgb, var(--muted) 22%, transparent); }
+.ring-bar {
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+.ring-num { position: absolute; font-family: var(--display); font-size: 1.35rem; line-height: 1; }
+.ring-full .ring-bar { stroke: #facc15; filter: drop-shadow(0 0 8px rgb(250 204 21 / 0.6)); }
+.ring-full { animation: ringPulse 1.6s ease-in-out 1s 2; }
+@keyframes ringPulse { 50% { transform: scale(1.08); } }
+[dir='rtl'] .progress-ring svg { transform: rotate(-90deg) scaleY(-1); } /* fill clockwise from the right in Hebrew */
+@media (prefers-reduced-motion: reduce) {
+    .ring-bar { transition: none; }
+    .ring-full { animation: none; }
+}

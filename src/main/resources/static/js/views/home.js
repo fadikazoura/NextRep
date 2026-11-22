@@ -117,14 +117,78 @@ function weekCard(plan, thisWeek, weekStart) {
     });
 
     const goal = planned.size;
-    return h('div', { class: 'card stack', style: 'gap: 12px' },
-        h('div', { class: 'row' },
-            h('h3', {}, t('home.thisWeek')),
+    const done = thisWeek.length;
+    const left = Math.max(0, goal - done);
+    return h('div', { class: 'card stack', style: 'gap: 14px' },
+        h('div', { class: 'row week-head' },
+            h('div', { class: 'stack', style: 'gap: 2px' },
+                h('h3', {}, t('home.thisWeek')),
+                h('span', { class: 'muted small' }, goal
+                    ? t('home.weekProgress', { done, goal })
+                    : t('home.weekCount', { done })),
+                goal ? h('span', { class: `small week-hint ${left ? '' : 'week-hint-done'}` },
+                    left ? t('home.weekLeft', { left }) : t('home.weekGoalHit')) : null),
             h('span', { class: 'spacer' }),
-            h('span', { class: 'muted small' }, goal
-                ? t('home.weekProgress', { done: thisWeek.length, goal })
-                : t('home.weekCount', { done: thisWeek.length }))),
+            goal ? progressRing(Math.min(1, done / goal)) : null),
         h('div', { class: 'week-strip' }, days));
+}
+
+/**
+ * Circular progress for the weekly goal: the ring fills and the number counts up when the card appears.
+ * Drawn with one SVG circle and stroke-dashoffset, so it is crisp at any size and needs no library.
+ */
+function progressRing(fraction) {
+    const SIZE = 76;
+    const STROKE = 8;
+    const r = (SIZE - STROKE) / 2;
+    const length = 2 * Math.PI * r;
+    const pct = Math.round(fraction * 100);
+    const NS = 'http://www.w3.org/2000/svg';
+    const circle = (cls) => {
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('class', cls);
+        c.setAttribute('cx', SIZE / 2);
+        c.setAttribute('cy', SIZE / 2);
+        c.setAttribute('r', r);
+        c.setAttribute('stroke-width', STROKE);
+        return c;
+    };
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+    svg.setAttribute('width', SIZE);
+    svg.setAttribute('height', SIZE);
+    svg.setAttribute('aria-hidden', 'true');
+    const bar = circle('ring-bar');
+    bar.style.strokeDasharray = `${length}`;
+    bar.style.strokeDashoffset = `${length}`; // empty; filled below so the transition runs
+    svg.append(circle('ring-track'), bar);
+
+    const number = h('strong', { class: 'ring-num' }, '0%');
+    const ring = h('div', {
+        class: `progress-ring ${pct >= 100 ? 'ring-full' : ''}`,
+        role: 'img', 'aria-label': t('home.weekRingLabel', { pct }),
+    }, svg, number);
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const show = () => {
+        bar.style.strokeDashoffset = `${length * (1 - fraction)}`;
+        if (reduced || pct === 0) {
+            number.textContent = `${pct}%`;
+            return;
+        }
+        const start = performance.now();
+        const DURATION = 900;
+        const step = (now) => {
+            const p = Math.min(1, (now - start) / DURATION);
+            const eased = 1 - (1 - p) ** 3;
+            number.textContent = `${Math.round(pct * eased)}%`;
+            if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    };
+    // Start once the ring is on screen (the view is built before it is attached).
+    requestAnimationFrame(() => requestAnimationFrame(show));
+    return ring;
 }
 
 function stat(iconEl, value, label) {
