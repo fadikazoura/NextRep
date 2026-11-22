@@ -3,14 +3,17 @@ import { icon } from '../icons.js';
 import { t, enumLabel } from '../i18n.js';
 import { api, ApiError } from '../api.js';
 import { lineChart } from '../chart.js';
+import { loadUnit, unitLabel, toDisplay, formatWeight, weightText, volumeText, fromInput, inputValue, isLb } from '../units.js';
 
+// Every metric is a weight in kg from the server; the chart shows it in the user's unit.
 const METRICS = [
-    { key: 'estimatedOneRepMaxKg', label: 'progress.metric.e1rm', unit: ' kg' },
-    { key: 'topWeightKg', label: 'progress.metric.top', unit: ' kg' },
-    { key: 'volumeKg', label: 'progress.metric.volume', unit: '' },
+    { key: 'estimatedOneRepMaxKg', label: 'progress.metric.e1rm', withUnit: true },
+    { key: 'topWeightKg', label: 'progress.metric.top', withUnit: true },
+    { key: 'volumeKg', label: 'progress.metric.volume', withUnit: false },
 ];
 
 export async function progressView() {
+    await loadUnit();
     const [records, bodyWeights, history] = await Promise.all([
         api('/api/users/me/records'),
         api('/api/users/me/body-weight'),
@@ -42,7 +45,7 @@ function recentWorkouts(page) {
             h('div', {},
                 h('div', { class: 'ex-name' }, w.planDayName ?? t('workout.freeTitle')),
                 h('div', { class: 'muted small' }, formatDate(w.startedAt))),
-            h('div', { class: 'ex-scheme' }, `${w.setCount} ${t('workout.sets').toLowerCase()} · ${formatKg(w.totalVolumeKg)} kg`)))),
+            h('div', { class: 'ex-scheme' }, `${w.setCount} ${t('workout.sets').toLowerCase()} · ${volumeText(w.totalVolumeKg)}`)))),
     );
 }
 
@@ -60,13 +63,13 @@ function recordCard(record) {
     const draw = () => {
         const points = loaded.points
             .filter((p) => p[metric.key] != null)
-            .map((p) => ({ x: p.date, y: Number(p[metric.key]) }));
+            .map((p) => ({ x: p.date, y: toDisplay(p[metric.key]) }));
         const tabs = h('div', { class: 'chips' }, METRICS.map((m) => h('button', {
             type: 'button', class: 'chip chip-sm', 'aria-pressed': String(m === metric),
             onclick: () => { metric = m; draw(); },
         }, t(m.label))));
         chartBox.replaceChildren(tabs,
-            points.length > 1 ? lineChart(points, { unit: metric.unit, label: `${record.exerciseName} — ${t(metric.label)}` })
+            points.length > 1 ? lineChart(points, { unit: metric.withUnit ? ` ${unitLabel()}` : '', label: `${record.exerciseName} — ${t(metric.label)}` })
                 : h('p', { class: 'muted small' }, t('progress.needMore')));
     };
 
@@ -91,7 +94,7 @@ function recordCard(record) {
 
     const line = (label, set) => set
         ? h('div', { class: 'pr-line' }, h('span', { class: 'muted small' }, label),
-            h('span', { class: 'pr-value' }, `${formatKg(set.weightKg)} kg × ${set.reps}`))
+            h('span', { class: 'pr-value' }, `${weightText(set.weightKg)} × ${set.reps}`))
         : null;
 
     return h('article', { class: 'card stack', style: 'gap: 10px' },
@@ -101,8 +104,8 @@ function recordCard(record) {
                 h('span', { class: 'muted small' }, enumLabel(record.muscleGroup))),
             h('span', { class: 'spacer' }),
             record.estimatedOneRepMaxKg != null
-                ? h('div', { class: 'pr-big' }, h('strong', {}, `${formatKg(record.estimatedOneRepMaxKg)}`),
-                    h('span', { class: 'muted small' }, t('progress.e1rmShort')))
+                ? h('div', { class: 'pr-big' }, h('strong', {}, formatWeight(record.estimatedOneRepMaxKg)),
+                    h('span', { class: 'muted small' }, t('progress.e1rmShort', { unit: unitLabel() })))
                 : null),
         h('div', { class: 'grid-2' }, line(t('progress.heaviest'), record.heaviest), line(t('progress.mostReps'), record.mostReps)),
         toggle,
@@ -121,8 +124,9 @@ function bodyWeightCard(entries) {
         const change = latest && first && latest !== first ? Number(latest.weightKg) - Number(first.weightKg) : null;
 
         const input = h('input', {
-            type: 'number', inputmode: 'decimal', min: 25, max: 400, step: 0.1,
-            placeholder: 'kg', 'aria-label': t('progress.todayWeight'), value: latest?.weightKg ?? '',
+            type: 'number', inputmode: 'decimal', min: isLb() ? 55 : 25, max: isLb() ? 880 : 400, step: 0.1,
+            placeholder: unitLabel(), 'aria-label': t('progress.todayWeight', { unit: unitLabel() }),
+            value: inputValue(latest?.weightKg),
         });
         const error = h('p', { class: 'field-error', hidden: true });
         const save = h('button', { class: 'btn btn-primary', type: 'submit' }, t('common.save'));
@@ -133,7 +137,7 @@ function bodyWeightCard(entries) {
             if (input.value === '') return;
             save.disabled = true;
             try {
-                const saved = await api('/api/users/me/body-weight', { method: 'PUT', body: { weightKg: Number(input.value) } });
+                const saved = await api('/api/users/me/body-weight', { method: 'PUT', body: { weightKg: fromInput(input.value) } });
                 const index = sorted.findIndex((e) => e.recordedOn === saved.recordedOn);
                 if (index >= 0) sorted[index] = saved; else sorted.push(saved); // PUT = one entry per day (upsert)
                 sorted.sort((a, b) => a.recordedOn.localeCompare(b.recordedOn));
@@ -152,17 +156,17 @@ function bodyWeightCard(entries) {
         card.replaceChildren(...[
             latest
                 ? h('div', { class: 'row' },
-                    h('div', { class: 'pr-big pr-big-start' }, h('strong', {}, `${formatKg(latest.weightKg)} kg`),
+                    h('div', { class: 'pr-big pr-big-start' }, h('strong', {}, weightText(latest.weightKg)),
                         h('span', { class: 'muted small' }, formatDate(latest.recordedOn))),
                     h('span', { class: 'spacer' }),
                     change !== null ? h('span', { class: `badge ${change <= 0 ? 'badge-accent' : ''}` },
-                        `${change > 0 ? '+' : ''}${formatKg(change)} kg`) : null)
+                        `${change > 0 ? '+' : ''}${weightText(change)}`) : null)
                 : h('p', { class: 'muted' }, t('progress.noWeight')),
             sorted.length > 1
-                ? lineChart(sorted.map((e) => ({ x: e.recordedOn, y: Number(e.weightKg) })),
-                    { unit: '', label: t('progress.bodyWeight') })
+                ? lineChart(sorted.map((e) => ({ x: e.recordedOn, y: toDisplay(e.weightKg) })),
+                    { unit: ` ${unitLabel()}`, label: t('progress.bodyWeight') })
                 : null,
-            h('label', { class: 'small muted' }, t('progress.todayWeight')),
+            h('label', { class: 'small muted' }, t('progress.todayWeight', { unit: unitLabel() })),
             form,
             error,
         ].filter(Boolean));
@@ -173,11 +177,6 @@ function bodyWeightCard(entries) {
 }
 
 /* ---------- helpers ---------- */
-
-function formatKg(value) {
-    const n = Number(value);
-    return Number.isInteger(n) ? String(n) : (Math.round(n * 100) / 100).toString();
-}
 
 function formatDate(iso) {
     return new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });

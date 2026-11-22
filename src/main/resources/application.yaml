@@ -1,4 +1,13 @@
 spring:
+  web:
+    resources:
+      cache:
+        # The UI has no build step, so its files keep the same names after a deploy. "no-cache" makes the browser
+        # ask "did this change?" every time; unchanged files get a tiny 304 (via Last-Modified), changed ones arrive
+        # at once. No more stale screens after a release.
+        cachecontrol:
+          no-cache: true
+          cache-private: true
   application:
     name: nextrep
   datasource:

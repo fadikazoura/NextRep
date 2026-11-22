@@ -3,7 +3,7 @@
  * Strategy: network first, cache as fallback — users always get the newest version after a deploy,
  * and the app shell still opens without a connection. API calls are never cached (they carry personal data).
  */
-const CACHE = 'nextrep-shell-v1';
+const CACHE = 'nextrep-shell-v2'; // bump to drop old caches
 const SHELL = ['/', '/css/app.css', '/js/app.js', '/manifest.json', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {

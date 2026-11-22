@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -43,6 +44,13 @@ class WebUiIntegrationTest {
         mockMvc.perform(get("/sw.js")).andExpect(status().isOk());
         mockMvc.perform(get("/icons/icon-192.png")).andExpect(status().isOk());
         mockMvc.perform(get("/fonts/barlow-condensed-700.woff2")).andExpect(status().isOk());
+    }
+
+    @Test
+    void staticFilesAreRevalidatedSoADeployIsSeenAtOnce() throws Exception {
+        mockMvc.perform(get("/js/app.js"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("no-cache")));
     }
 
     @Test
