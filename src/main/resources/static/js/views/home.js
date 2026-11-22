@@ -5,6 +5,7 @@ import { hasProfile } from '../profile-status.js';
 import { icon } from '../icons.js';
 import { muscleMapCard } from './muscle-map.js';
 import { currentUser } from '../current-user.js';
+import { loadUnit, volumeText } from '../units.js';
 
 const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']; // JS getDay() order
 
@@ -34,6 +35,7 @@ export async function homeView() {
         getOrNull('/api/users/me/plan'),
         getOrNull('/api/users/me/workouts/current'),
         api('/api/users/me/workouts?size=30'),
+        loadUnit(), // so the volume below is shown in kg or lb
     ]);
 
     const weekStart = startOfWeek(new Date());
@@ -45,7 +47,7 @@ export async function homeView() {
         current ? inProgressCard(current) : todayCard(plan),
         weekCard(plan, thisWeek, weekStart),
         h('div', { class: 'grid-2' },
-            stat(icon('bolt', { size: 18 }), `${formatNumber(volume)} kg`, t('home.weekVolume')),
+            stat(icon('bolt', { size: 18 }), volumeText(volume), t('home.weekVolume')),
             stat(icon('flame', { size: 18 }), String(history.totalElements), t('home.totalWorkouts'))),
         h('div', { class: 'grid-2' },
             quickLink('#/progress', 'chart', t('home.progress')),
@@ -167,6 +169,3 @@ function todayLabel() {
     return new Date().toLocaleDateString(getLang() === 'he' ? 'he-IL' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-function formatNumber(value) {
-    return Math.round(value).toLocaleString('en-US');
-}

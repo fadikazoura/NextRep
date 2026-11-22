@@ -1083,3 +1083,45 @@ input:disabled { opacity: 0.65; cursor: not-allowed; }
 
 /* "hidden" must always win over display rules like .icon-btn { display: inline-flex } */
 [hidden] { display: none !important; }
+
+/* ---------- screen transitions ---------- */
+#view.view-in { animation: viewIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes viewIn { from { opacity: 0; transform: translate(var(--enter-x, 0), var(--enter-y, 12px)); } }
+
+/* ---------- plate calculator ---------- */
+.plate-card { gap: 12px; }
+.plate-badge { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 6px var(--surface), 0 8px 30px color-mix(in srgb, var(--accent) 45%, transparent); }
+.plate-title { color: var(--accent); }
+.plate-target { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; }
+.plate-target input { width: 7.5rem; font-family: var(--display); font-size: 1.6rem; text-align: center; }
+.plate-card .chips { justify-content: center; }
+.plate-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+    height: 120px;
+    padding-inline-start: 14px;
+    direction: ltr; /* a barbell looks the same in every language */
+    background: linear-gradient(transparent 46%, #9ca3af 46%, #d1d5db 50%, #6b7280 54%, transparent 54%);
+    border-radius: 6px;
+}
+.plate-sleeve { width: 10px; height: 34%; border-radius: 3px; background: #6b7280; }
+.plate {
+    width: 16px;
+    height: var(--h);
+    border-radius: 4px;
+    background: var(--c);
+    box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.25), 0 2px 6px rgb(0 0 0 / 0.35);
+    animation: plateIn 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+    animation-delay: calc(var(--i) * 0.05s);
+}
+.plate-collar { width: 8px; height: 26%; border-radius: 2px; background: #374151; }
+@keyframes plateIn { from { opacity: 0; transform: translateX(40px); } }
+.plate-list { margin: 0; font-weight: 700; font-size: 1.1rem; }
+.plate-open { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+    #view.view-in, .plate { animation: none; }
+}

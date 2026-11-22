@@ -1,4 +1,5 @@
 import { api, ApiError } from './api.js';
+import { resetUnit } from './units.js';
 
 /**
  * Remembers whether the logged-in user already has a profile, so we ask the server once per session.
@@ -24,4 +25,5 @@ export function markProfileSaved() {
 
 export function resetProfileStatus() {
     cached = null;
+    resetUnit();
 }

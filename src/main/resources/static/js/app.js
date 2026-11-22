@@ -39,6 +39,25 @@ const TABS = [
 
 const main = document.getElementById('view');
 let pendingNotice = null;
+let shownPath = null;
+
+/**
+ * Screen transition: the new screen slides in from the side of the tab you tapped (mirrored in Hebrew),
+ * or rises in for screens outside the tab bar. Re-renders of the same screen (language change) don't animate.
+ */
+function animateIn(path) {
+    if (path === shownPath) return;
+    const from = TABS.findIndex((tab) => tab.path === shownPath);
+    const to = TABS.findIndex((tab) => tab.path === path);
+    const rtl = document.documentElement.dir === 'rtl' ? -1 : 1;
+    const dx = from >= 0 && to >= 0 ? Math.sign(to - from) * 28 * rtl : 0;
+    main.style.setProperty('--enter-x', `${dx}px`);
+    main.style.setProperty('--enter-y', dx ? '0px' : '12px');
+    main.classList.remove('view-in');
+    void main.offsetWidth; // restart the animation
+    main.classList.add('view-in');
+    shownPath = path;
+}
 
 /** The route part of the hash, without query params: "#/workout?day=3" -> "/workout". */
 function currentPath() {
@@ -73,7 +92,10 @@ async function render() {
             return;
         }
         const view = await route.view({ notice });
-        if (currentPath() === path) main.replaceChildren(view);
+        if (currentPath() === path) {
+            main.replaceChildren(view);
+            animateIn(path);
+        }
     } catch (error) {
         if (error instanceof ApiError && error.status === 401) return; // session-expired handler redirects
         main.replaceChildren(h('p', { class: 'form-error' },

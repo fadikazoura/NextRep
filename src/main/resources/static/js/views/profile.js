@@ -2,6 +2,7 @@ import { h, toast } from '../dom.js';
 import { t, enumLabel } from '../i18n.js';
 import { api, ApiError } from '../api.js';
 import { markProfileSaved } from '../profile-status.js';
+import { setUnit } from '../units.js';
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
@@ -112,6 +113,7 @@ export async function profileView({ notice } = {}) {
             });
             Object.values(errors).forEach((el) => { el.hidden = true; });
             markProfileSaved();
+            setUnit(inputs.weightUnit.value);
             toast(t('profile.saved'));
             if (isNew) location.hash = '#/plan';
         } catch (error) {

@@ -7,6 +7,8 @@ import { createRestTimer } from '../rest-timer.js';
 import { celebratePr, estimateOneRepMax } from '../celebrate.js';
 import { invalidateMuscleVolume } from './muscle-map.js';
 import { maybePromptRating } from './feedback.js';
+import { openPlateCalculator } from '../plate-calculator.js';
+import { loadUnit, unitLabel, weightText, volumeText, fromInput, inputValue, weightStep } from '../units.js';
 
 const BASE = '/api/users/me/workouts';
 
@@ -27,6 +29,7 @@ function requestedDayId() {
 }
 
 export async function workoutView() {
+    await loadUnit();
     let workout = await getOrNull(`${BASE}/current`);
     const dayId = requestedDayId();
     let notice = null;
@@ -82,10 +85,12 @@ async function pickWorkout() {
 /* ---------- workout in progress ---------- */
 
 async function activeWorkout(workout, notice) {
-    const [recommendations, records] = await Promise.all([
+    const [recommendations, records, catalog] = await Promise.all([
         workout.planDayId ? getOrNull(`/api/users/me/plan/days/${workout.planDayId}/recommendations`) : null,
         api('/api/users/me/records').catch(() => []),
+        api('/api/exercises').catch(() => []), // to know which exercises use a barbell (plate calculator)
     ]);
+    const barbell = new Set(catalog.filter((ex) => ex.equipment === 'BARBELL').map((ex) => ex.id));
 
     // Best results so far, per exercise, so a new personal record can be celebrated the moment it's logged.
     const bests = new Map(records.map((r) => [r.exerciseId, {
@@ -113,7 +118,7 @@ async function activeWorkout(workout, notice) {
         if (shownExercises.has(exerciseId)) return;
         shownExercises.add(exerciseId);
         cards.append(exerciseCard({
-            workout, exerciseId, name, recommendation,
+            workout, exerciseId, name, recommendation, barbell: barbell.has(exerciseId),
             onLogged: (set) => {
                 restTimer.start();
                 checkForRecord(set, name, bests);
@@ -124,7 +129,8 @@ async function activeWorkout(workout, notice) {
     for (const rec of recommendations?.exercises ?? []) addCard(rec.exerciseId, rec.exerciseName, rec);
     for (const set of workout.sets) addCard(set.exerciseId, set.exerciseName, null);
 
-    root.append(
+    // Native append() would print null as the text "null", so empty parts are filtered out.
+    root.append(...[
         h('div', { class: 'stack', style: 'gap: 4px' },
             h('h1', {}, workout.planDayName ?? t('workout.freeTitle')),
             clock),
@@ -132,7 +138,8 @@ async function activeWorkout(workout, notice) {
         cards,
         addExercisePicker((exercise) => addCard(exercise.id, exercise.name, null)),
         finishActions(workout, root, () => { clearInterval(timer); restTimer.stop(); }),
-        restTimer.el);
+        restTimer.el,
+    ].filter(Boolean));
     return root;
 }
 
@@ -145,22 +152,22 @@ function checkForRecord(set, name, bests) {
         return;
     }
     if (weight > best.heaviest) {
-        celebratePr(name, t('pr.heaviest', { weight: formatKg(weight), reps: set.reps }));
+        celebratePr(name, t('pr.heaviest', { weight: weightText(weight), reps: set.reps }));
     } else if (e1rm > best.e1rm + 0.01) {
-        celebratePr(name, t('pr.e1rm', { e1rm: formatKg(Math.round(e1rm * 10) / 10) }));
+        celebratePr(name, t('pr.e1rm', { e1rm: weightText(e1rm) }));
     }
     best.heaviest = Math.max(best.heaviest, weight);
     best.e1rm = Math.max(best.e1rm, e1rm);
 }
 
-function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
+function exerciseCard({ workout, exerciseId, name, recommendation, barbell, onLogged }) {
     const mySets = () => workout.sets.filter((s) => s.exerciseId === exerciseId);
     const lastSet = mySets().at(-1);
 
     const weight = h('input', {
-        type: 'number', inputmode: 'decimal', min: 0, max: 1000, step: 0.25, placeholder: 'kg',
-        'aria-label': t('workout.weight'),
-        value: lastSet?.weightKg ?? recommendation?.weightKg ?? '',
+        type: 'number', inputmode: 'decimal', min: 0, max: 2200, step: weightStep(), placeholder: unitLabel(),
+        'aria-label': t('workout.weight', { unit: unitLabel() }),
+        value: inputValue(lastSet?.weightKg ?? recommendation?.weightKg),
     });
     const reps = h('input', {
         type: 'number', inputmode: 'numeric', min: 0, max: 100, step: 1, placeholder: t('workout.reps'),
@@ -179,7 +186,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
             : t('workout.setsLogged', { count: sets.length });
         setList.replaceChildren(...sets.map((set) => h('li', {},
             h('span', { class: 'set-num' }, `#${set.setNumber}`),
-            h('span', { class: 'set-value' }, `${formatKg(set.weightKg)} kg × ${set.reps}`),
+            h('span', { class: 'set-value' }, `${weightText(set.weightKg)} × ${set.reps}`),
             h('button', {
                 class: 'icon-btn icon-btn-sm', type: 'button', 'aria-label': t('workout.deleteSet'),
                 onclick: () => removeSet(set),
@@ -209,7 +216,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
         try {
             const set = await api(`${BASE}/${workout.id}/sets`, {
                 method: 'POST',
-                body: { exerciseId, weightKg: Number(weight.value), reps: Number(reps.value) },
+                body: { exerciseId, weightKg: fromInput(weight.value), reps: Number(reps.value) },
             });
             workout.sets.push(set);
             renderSets();
@@ -225,9 +232,17 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
         }
     });
 
+    const plates = barbell ? h('button', {
+        class: 'icon-btn icon-btn-sm plate-open', type: 'button', 'aria-label': t('plates.open'), title: t('plates.open'),
+        onclick: () => openPlateCalculator({
+            weightKg: weight.value === '' ? null : fromInput(weight.value),
+            onUse: (kg) => { weight.value = inputValue(kg); reps.focus(); },
+        }),
+    }, icon('barbell', { size: 18 })) : null;
+
     renderSets();
     return h('article', { class: 'card stack', style: 'gap: 10px' },
-        h('div', { class: 'row' }, h('h3', {}, exerciseName(exerciseId, name, 'ex-title')), h('span', { class: 'spacer' }), counter),
+        h('div', { class: 'row' }, h('h3', {}, exerciseName(exerciseId, name, 'ex-title')), h('span', { class: 'spacer' }), counter, plates),
         recommendation ? recommendationLine(recommendation) : null,
         setList,
         form,
@@ -237,7 +252,7 @@ function exerciseCard({ workout, exerciseId, name, recommendation, onLogged }) {
 function recommendationLine(rec) {
     const range = rec.repMin === rec.repMax ? `${rec.repMin}` : `${rec.repMin}–${rec.repMax}`;
     const target = rec.weightKg != null
-        ? `${rec.sets} × ${range} @ ${formatKg(rec.weightKg)} kg`
+        ? `${rec.sets} × ${range} @ ${weightText(rec.weightKg)}`
         : `${rec.sets} × ${range}`;
     return h('div', { class: 'rec' },
         h('span', { class: `badge rec-${rec.action.toLowerCase()}` }, t(`action.${rec.action}`)),
@@ -336,7 +351,7 @@ function summary(workout) {
             stat(`${minutes} ${t('workout.min')}`, t('workout.duration')),
             stat(String(sets.length), t('workout.sets')),
             stat(String(exercises), t('workout.exercises')),
-            stat(`${formatKg(volume)} kg`, t('workout.volume'))),
+            stat(volumeText(volume), t('workout.volume'))),
         h('a', { class: 'btn btn-primary btn-block', href: '#/progress' }, t('workout.seeProgress')),
         h('a', { class: 'btn btn-block', href: '#/' }, t('nav.home')));
 }
@@ -350,11 +365,6 @@ function groupByMuscle(exercises) {
         groups.get(ex.muscleGroup).push(ex);
     }
     return [...groups.entries()];
-}
-
-function formatKg(value) {
-    const n = Number(value);
-    return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, '');
 }
 
 function formatDuration(ms) {
