@@ -1,6 +1,6 @@
 import { h, spinner } from '../dom.js';
 import { t, enumLabel } from '../i18n.js';
-import { api, ApiError } from '../api.js';
+import { api } from '../api.js';
 import { icon } from '../icons.js';
 import { exerciseName } from './exercise-guide.js';
 
@@ -191,23 +191,13 @@ async function upgradeTo3d(figureBox, onSelect) {
     try {
         const { createBody3d, webglAvailable } = await import('../body3d.js');
         if (!webglAvailable()) return null;
-        const sex = await profileSex();
         const holder = h('div', { class: 'body3d' });
-        const instance = createBody3d(holder, { sex, onSelect });
+        const instance = createBody3d(holder, { onSelect });
         figureBox.replaceChildren(holder);
         figureBox.classList.add('is-3d');
         return instance;
     } catch {
         return null;
-    }
-}
-
-async function profileSex() {
-    try {
-        return (await api('/api/users/me/profile')).sex;
-    } catch (error) {
-        if (error instanceof ApiError && error.status === 404) return 'MALE';
-        throw error;
     }
 }
 
