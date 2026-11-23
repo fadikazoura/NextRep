@@ -15,22 +15,22 @@ personal records and shows your progress — in English or Hebrew, on phone or d
 **App: https://nextrep-07r6.onrender.com** · API docs: https://nextrep-07r6.onrender.com/swagger-ui.html
 
 > Hosted on free tiers (Render + Neon). An uptime monitor keeps the server awake, but if it has been idle the
-> **first load can take up to a minute**. Create an account and set up your training profile to get a plan.
+> **first load can take up to a minute**. Tap **Try the demo** for a ready account with 8 weeks of workouts — no sign-up — or create your own.
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="300" alt="Logging a set with the plate calculator, a new personal record, and progress charts">
+  <img src="docs/screenshots/demo.gif" width="300" alt="Asking the AI coach, loading the bar with the plate calculator, a new PR, an unlocked achievement and the achievements page">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile.png" alt="Home, workout logging with recommendations, plate calculator and progress charts">
+  <img src="docs/screenshots/mobile.png" alt="Home with the weekly ring, streak and last-week comparison; a workout with recommendations; achievements; the AI coach">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/desktop.png" alt="Desktop home with the 3D muscle map">
+  <img src="docs/screenshots/desktop.png" alt="Desktop home that fits one screen, with the anatomical 3D muscle map">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile-2.png" alt="Login, weekly AI plan and the Hebrew right-to-left interface">
+  <img src="docs/screenshots/mobile-2.png" alt="Login with the one-click demo, the plate calculator and the Hebrew right-to-left interface">
 </p>
 
 ---
