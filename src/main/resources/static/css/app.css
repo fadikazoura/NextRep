@@ -714,9 +714,11 @@ section:has(> .rest-bar:not([hidden])) { padding-bottom: 84px; }
         display: grid;
         grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
         gap: 28px;
-        align-items: start;
+        align-items: stretch; /* the muscle map card is as tall as the dashboard next to it */
     }
-    .home-aside { position: sticky; top: 88px; }
+    .home-aside { display: flex; flex-direction: column; }
+    .home-aside .muscle-card { flex: 1; }
+    .home-aside .muscle-figure { flex: 1; align-items: center; } /* the extra height goes around the figure */
 }
 
 .muscle-figure {
