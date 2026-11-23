@@ -60,6 +60,45 @@ public class GeminiClient {
         }
     }
 
+    /**
+     * A conversation: fixed instructions for the model (the "system instruction", which the user cannot see or
+     * change) plus the turns so far, ending with the user's question. Returns the model's plain-text answer.
+     *
+     * @throws AiUnavailableException if the AI is not configured, fails, times out or returns nothing
+     */
+    public String generateText(String systemInstruction, List<ChatTurn> turns, double temperature, int maxOutputTokens) {
+        if (!properties.enabled()) {
+            throw new AiUnavailableException("Gemini API key is not configured");
+        }
+
+        Map<String, Object> body = Map.of(
+                "systemInstruction", Map.of("parts", List.of(Map.of("text", systemInstruction))),
+                "contents", turns.stream()
+                        .map(turn -> Map.of("role", turn.fromUser() ? "user" : "model",
+                                "parts", List.of(Map.of("text", turn.text()))))
+                        .toList(),
+                "generationConfig", Map.of("temperature", temperature, "maxOutputTokens", maxOutputTokens));
+
+        try {
+            GenerateContentResponse response = restClient.post()
+                    .uri("/v1beta/models/{model}:generateContent", properties.model())
+                    .header("x-goog-api-key", properties.apiKey())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(GenerateContentResponse.class);
+            return extractText(response);
+        } catch (RestClientException e) {
+            log.warn("Gemini chat request to model {} failed: {} (root cause: {})",
+                    properties.model(), e.getMessage(), e.getMostSpecificCause().toString());
+            throw new AiUnavailableException("Gemini request failed", e);
+        }
+    }
+
+    /** One message of a conversation; {@code fromUser} is false for the model's earlier answers. */
+    public record ChatTurn(boolean fromUser, String text) {
+    }
+
     private static String extractText(GenerateContentResponse response) {
         if (response == null || response.candidates() == null || response.candidates().isEmpty()) {
             throw new AiUnavailableException("Gemini returned no candidates");

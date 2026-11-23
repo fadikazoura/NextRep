@@ -65,6 +65,9 @@ jobs:
         run: ./mvnw -B -DskipTests package
 
       - name: Start NextRep
+        env:
+          # The browser tests sign up many users from one address; the limits have their own integration tests.
+          NEXTREP_RATE_LIMIT_ENABLED: 'false'
         run: |
           java -jar target/nextrep-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
           timeout 120 bash -c 'until curl -sf http://localhost:8080/actuator/health > /dev/null; do sleep 2; done'

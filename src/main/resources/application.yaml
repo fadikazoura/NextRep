@@ -51,6 +51,11 @@ nextrep:
       model: gemini-3.1-flash-lite
       base-url: https://generativelanguage.googleapis.com
       timeout: 30s
+  rate-limit:
+    # Per-IP limits on login, sign-up, demo, password reset, contact and AI endpoints (see RateLimitFilter).
+    enabled: ${NEXTREP_RATE_LIMIT_ENABLED:true}
+    # Render sits behind Cloudflare, which puts the visitor's real IP in True-Client-IP (it can't be faked).
+    client-ip-header: True-Client-IP
   mail:
     # Read from the environment; empty means "don't send, write emails to the log".
     brevo-api-key: ${BREVO_API_KEY:}
