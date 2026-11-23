@@ -6,6 +6,7 @@ import { icon } from '../icons.js';
 import { muscleMapCard } from './muscle-map.js';
 import { currentUser } from '../current-user.js';
 import { loadUnit, volumeText } from '../units.js';
+import { loadInsights, celebrateNewAchievements } from '../insights.js';
 import { session } from '../api.js';
 import { resetProfileStatus } from '../profile-status.js';
 import { clearCurrentUser } from '../current-user.js';
@@ -34,12 +35,14 @@ export async function homeView() {
         return h('section', { class: 'stack' }, header, setupCard());
     }
 
-    const [plan, current, history] = await Promise.all([
+    const [plan, current, history, insights] = await Promise.all([
         getOrNull('/api/users/me/plan'),
         getOrNull('/api/users/me/workouts/current'),
         api('/api/users/me/workouts?size=30'),
+        loadInsights().catch(() => null), // extras: the page still works without them
         loadUnit(), // so the volume below is shown in kg or lb
     ]);
+    if (insights) celebrateNewAchievements(insights);
 
     const weekStart = startOfWeek(new Date());
     const thisWeek = history.content.filter((w) => new Date(w.startedAt) >= weekStart);
@@ -49,7 +52,8 @@ export async function homeView() {
         header,
         me.demo ? demoBanner() : null,
         current ? inProgressCard(current) : todayCard(plan),
-        weekCard(plan, thisWeek, weekStart),
+        weekCard(plan, thisWeek, weekStart, insights?.streakWeeks ?? 0),
+        insights ? lastWeekCard(insights) : null,
         h('div', { class: 'grid-2' },
             stat(icon('bolt', { size: 18 }), volumeText(volume), t('home.weekVolume')),
             stat(icon('flame', { size: 18 }), String(history.totalElements), t('home.totalWorkouts'))),
@@ -120,7 +124,7 @@ function todayCard(plan) {
         h('a', { class: 'btn btn-block', href: '#/workout' }, t('home.trainAnyway')));
 }
 
-function weekCard(plan, thisWeek, weekStart) {
+function weekCard(plan, thisWeek, weekStart, streak) {
     const planned = new Set(plan?.days.map((d) => d.dayOfWeek) ?? []);
     const doneDays = new Set(thisWeek.map((w) => DAY_NAMES[new Date(w.startedAt).getDay()]));
     const todayIndex = Math.floor((startOfDay(new Date()) - weekStart) / 86400000);
@@ -141,7 +145,10 @@ function weekCard(plan, thisWeek, weekStart) {
     return h('div', { class: 'card stack', style: 'gap: 14px' },
         h('div', { class: 'row week-head' },
             h('div', { class: 'stack', style: 'gap: 2px' },
-                h('h3', {}, t('home.thisWeek')),
+                h('div', { class: 'row', style: 'gap: 8px' },
+                    h('h3', {}, t('home.thisWeek')),
+                    streak >= 2 ? h('span', { class: 'streak-chip', title: t('home.streak', { count: streak }) },
+                        icon('flame', { size: 14 }), t('home.streak', { count: streak })) : null),
                 h('span', { class: 'muted small' }, goal
                     ? t('home.weekProgress', { done, goal })
                     : t('home.weekCount', { done })),
@@ -208,6 +215,32 @@ function progressRing(fraction) {
     // Start once the ring is on screen (the view is built before it is attached).
     requestAnimationFrame(() => requestAnimationFrame(show));
     return ring;
+}
+
+/** Last week next to the week before it: are things going up? */
+function lastWeekCard({ lastWeek, weekBefore, weeklyGoal }) {
+    if (!lastWeek.workouts && !weekBefore.workouts) return null;
+    const change = (now, before) => {
+        if (!before) return null;
+        const pct = Math.round(((now - before) / before) * 100);
+        if (pct === 0) return h('span', { class: 'delta' }, '=');
+        return h('span', { class: `delta ${pct > 0 ? 'up' : 'down'}` }, `${pct > 0 ? '▲' : '▼'} ${Math.abs(pct)}%`);
+    };
+    const cell = (value, label, delta) => h('div', { class: 'lw-cell' },
+        h('strong', { class: 'num' }, value),
+        h('span', { class: 'muted small' }, label),
+        delta);
+    return h('div', { class: 'card stack', style: 'gap: 12px' },
+        h('div', { class: 'row' },
+            h('h3', {}, t('home.lastWeek')),
+            h('span', { class: 'spacer' }),
+            h('span', { class: 'muted small' }, t('home.vsWeekBefore'))),
+        h('div', { class: 'lw-grid' },
+            cell(weeklyGoal ? `${lastWeek.workouts}/${weeklyGoal}` : String(lastWeek.workouts), t('home.workouts'),
+                change(lastWeek.workouts, weekBefore.workouts)),
+            cell(String(lastWeek.sets), t('workout.sets'), change(lastWeek.sets, weekBefore.sets)),
+            cell(volumeText(lastWeek.volumeKg), t('workout.volume'),
+                change(Number(lastWeek.volumeKg), Number(weekBefore.volumeKg)))));
 }
 
 function stat(iconEl, value, label) {

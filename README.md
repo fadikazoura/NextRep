@@ -45,6 +45,8 @@ personal records and shows your progress — in English or Hebrew, on phone or d
 | 📈 **Progression engine** | Double progression: hit the top of the rep range on every set → add weight; stall 3 times → deload 10% |
 | 🏆 **Personal records** | Heaviest set, estimated 1RM (Epley), most reps — with a celebration the moment you beat one |
 | 📊 **Progress charts** | Estimated 1RM, top weight and volume per exercise; body-weight history |
+| 🔥 **Streaks & achievements** | Weekly streak, last week vs. the week before, 11 badges with progress bars and an unlock celebration |
+| 🗂️ **Workout history** | Every past workout set by set, with "repeat this workout" |
 | 🧍 **3D muscle map** | Three.js body coloured by sets per muscle in the last 7 days; tap a muscle to see its exercises |
 | 📖 **Exercise guides** | Step-by-step instructions and tips for all 58 exercises, in English and Hebrew |
 | 🔩 **Plate calculator** | Which plates to load on each side of the bar, in kg or lb, with the closest loadable weight |
@@ -81,6 +83,8 @@ com.fadikazoura.nextrep
 ├── workout       workout sessions and sets
 ├── progression   double-progression engine and recommendations
 ├── stats         personal records, progress charts, muscle volume
+├── insights      streaks, weekly totals and achievements (derived from the logged sets)
+├── demo          one-click demo accounts with sample history, hourly cleanup
 ├── feedback      app rating and contact messages
 ├── mail          email sending (Brevo API, logging fallback), templates
 ├── common        error handling (RFC 9457 ProblemDetail), paging
@@ -144,7 +148,7 @@ All endpoints except register, login and password reset require `Authorization: 
 | Plan | `POST /api/users/me/plan/generate?ai=true` · `GET /api/users/me/plan` |
 | Recommendations | `GET /api/users/me/plan/days/{planDayId}/recommendations` |
 | Workouts | `POST /api/users/me/workouts` · `GET .../current` · `GET .../{id}` · `POST .../{id}/sets` · `DELETE .../{id}/sets/{setId}` · `POST .../{id}/complete` · `DELETE .../{id}` · `GET /api/users/me/workouts?page=&size=` |
-| Stats | `GET /api/users/me/records` · `GET /api/users/me/exercises/{id}/progress` · `GET /api/users/me/muscles/volume?days=7` |
+| Stats | `GET /api/users/me/records` · `GET /api/users/me/exercises/{id}/progress` · `GET /api/users/me/muscles/volume?days=7` · `GET /api/users/me/insights?tz=&firstDay=` |
 | Feedback | `GET` / `PUT /api/users/me/rating` · `POST /api/users/me/contact` |
 
 Errors use a consistent [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `ProblemDetail` body, with field-level
@@ -203,7 +207,7 @@ messages for validation errors.
 - [x] Docker image and cloud deployment (Render + Neon, auto-deploy from `main`)
 - [x] Web UI (plans, workout logging, progress charts), PWA, English/Hebrew
 - [x] Accounts, avatars, password reset by email, feedback
-- [ ] Achievement badges and a weekly summary
+- [x] Achievement badges, streaks and a weekly summary
 - [ ] Workout reminders (push notifications)
 - [x] End-to-end UI tests (Playwright) in CI
 - [ ] Refresh tokens and per-user time zones

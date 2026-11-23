@@ -7,6 +7,7 @@ import { createRestTimer } from '../rest-timer.js';
 import { celebratePr, estimateOneRepMax } from '../celebrate.js';
 import { invalidateMuscleVolume } from './muscle-map.js';
 import { maybePromptRating } from './feedback.js';
+import { loadInsights, celebrateNewAchievements } from '../insights.js';
 import { openPlateCalculator } from '../plate-calculator.js';
 import { loadUnit, unitLabel, weightText, volumeText, fromInput, inputValue, weightStep } from '../units.js';
 
@@ -302,7 +303,9 @@ function finishActions(workout, root, stopTimer) {
             stopTimer();
             invalidateMuscleVolume();
             root.replaceChildren(summary(done));
-            maybePromptRating();
+            // A new badge gets the stage; the rating question can wait for another workout.
+            const newBadges = await loadInsights().then(celebrateNewAchievements).catch(() => 0);
+            if (!newBadges) maybePromptRating();
         } catch (e) {
             if (e instanceof ApiError && e.status === 401) return;
             finish.disabled = false;
