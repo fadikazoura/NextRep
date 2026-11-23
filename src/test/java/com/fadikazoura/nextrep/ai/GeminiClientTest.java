@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,6 +86,27 @@ class GeminiClientTest {
         assertThatThrownBy(() -> client.generateJson("Build a plan", SCHEMA))
                 .isInstanceOf(AiUnavailableException.class)
                 .hasMessageContaining("not configured");
+        server.verify();
+    }
+
+    @Test
+    void chatSendsTheRulesAsSystemInstructionAndTheTurnsWithRoles() {
+        server.expect(requestTo(ENDPOINT))
+                .andExpect(jsonPath("$.systemInstruction.parts[0].text").value("Be a coach"))
+                .andExpect(jsonPath("$.contents[0].role").value("user"))
+                .andExpect(jsonPath("$.contents[1].role").value("model"))
+                .andExpect(jsonPath("$.contents[2].parts[0].text").value("And now?"))
+                .andExpect(jsonPath("$.generationConfig.maxOutputTokens").value(300))
+                .andRespond(withSuccess("""
+                        {"candidates": [{"content": {"parts": [{"text": "Rest today."}]}}]}
+                        """, MediaType.APPLICATION_JSON));
+
+        String answer = client("test-key").generateText("Be a coach", List.of(
+                new GeminiClient.ChatTurn(true, "Hi"),
+                new GeminiClient.ChatTurn(false, "Hello!"),
+                new GeminiClient.ChatTurn(true, "And now?")), 0.5, 300);
+
+        assertThat(answer).isEqualTo("Rest today.");
         server.verify();
     }
 

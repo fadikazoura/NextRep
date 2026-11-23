@@ -6,6 +6,8 @@ import com.fadikazoura.nextrep.auth.InvalidResetCodeException;
 import com.fadikazoura.nextrep.exercise.ExerciseNotFoundException;
 import com.fadikazoura.nextrep.feedback.RatingNotFoundException;
 import com.fadikazoura.nextrep.feedback.TooManyMessagesException;
+import com.fadikazoura.nextrep.ai.AiUnavailableException;
+import com.fadikazoura.nextrep.coach.CoachLimitReachedException;
 import com.fadikazoura.nextrep.plan.PlanDayNotFoundException;
 import com.fadikazoura.nextrep.plan.PlanNotFoundException;
 import com.fadikazoura.nextrep.user.EmailAlreadyUsedException;
@@ -144,6 +146,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TooManyMessagesException.class)
     ProblemDetail handleTooManyMessages(TooManyMessagesException ex) {
         return problem(HttpStatus.TOO_MANY_REQUESTS, "Too many messages", ex.getMessage());
+    }
+
+    @ExceptionHandler(CoachLimitReachedException.class)
+    ProblemDetail handleCoachLimit(CoachLimitReachedException ex) {
+        return problem(HttpStatus.TOO_MANY_REQUESTS, "Daily limit reached", ex.getMessage());
+    }
+
+    /** Only reaches here from the coach: plan generation catches it and falls back to the rule-based generator. */
+    @ExceptionHandler(AiUnavailableException.class)
+    ProblemDetail handleAiUnavailable(AiUnavailableException ex) {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "Coach unavailable", "The AI coach is not available right now. Please try again later.");
     }
 
     @ExceptionHandler(InvalidResetCodeException.class)

@@ -4,7 +4,7 @@
 ![Java 21](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-blue)
-![Tests](https://img.shields.io/badge/tests-190%2B-success)
+![Tests](https://img.shields.io/badge/tests-230%2B-success)
 
 **A smart gym workout tracker — Spring Boot backend + installable web app.** NextRep builds a personalised weekly
 training plan (rule-based or with AI), lets you log every set, tells you **how much to lift next time**, celebrates
@@ -15,22 +15,22 @@ personal records and shows your progress — in English or Hebrew, on phone or d
 **App: https://nextrep-07r6.onrender.com** · API docs: https://nextrep-07r6.onrender.com/swagger-ui.html
 
 > Hosted on free tiers (Render + Neon). An uptime monitor keeps the server awake, but if it has been idle the
-> **first load can take up to a minute**. Create an account and set up your training profile to get a plan.
+> **first load can take up to a minute**. Tap **Try the demo** for a ready account with 8 weeks of workouts — no sign-up — or create your own.
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" width="300" alt="Logging a set with the plate calculator, a new personal record, and progress charts">
+  <img src="docs/screenshots/demo.gif" width="300" alt="Asking the AI coach, loading the bar with the plate calculator, a new PR, an unlocked achievement and the achievements page">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile.png" alt="Home, workout logging with recommendations, plate calculator and progress charts">
+  <img src="docs/screenshots/mobile.png" alt="Home with the weekly ring, streak and last-week comparison; a workout with recommendations; achievements; the AI coach">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/desktop.png" alt="Desktop home with the 3D muscle map">
+  <img src="docs/screenshots/desktop.png" alt="Desktop home that fits one screen, with the anatomical 3D muscle map">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile-2.png" alt="Login, weekly AI plan and the Hebrew right-to-left interface">
+  <img src="docs/screenshots/mobile-2.png" alt="Login with the one-click demo, the plate calculator and the Hebrew right-to-left interface">
 </p>
 
 ---
@@ -45,6 +45,7 @@ personal records and shows your progress — in English or Hebrew, on phone or d
 | 📈 **Progression engine** | Double progression: hit the top of the rep range on every set → add weight; stall 3 times → deload 10% |
 | 🏆 **Personal records** | Heaviest set, estimated 1RM (Epley), most reps — with a celebration the moment you beat one |
 | 📊 **Progress charts** | Estimated 1RM, top weight and volume per exercise; body-weight history |
+| 💬 **AI coach** | Ask questions in English or Hebrew; Gemini answers with your profile, plan, recent workouts and records as context, with guardrails and a daily allowance |
 | 🔥 **Streaks & achievements** | Weekly streak, last week vs. the week before, 11 badges with progress bars and an unlock celebration |
 | 🗂️ **Workout history** | Every past workout set by set, with "repeat this workout" |
 | 🧍 **3D muscle map** | Three.js body coloured by sets per muscle in the last 7 days; tap a muscle to see its exercises |
@@ -54,6 +55,7 @@ personal records and shows your progress — in English or Hebrew, on phone or d
 | 👤 **Accounts** | Username or email login, phone with country code, avatar (presets or photo), data export, delete account |
 | 🔑 **Password reset** | 6-digit code sent by email (Brevo), hashed, 15-minute expiry, attempt and rate limits |
 | 🔐 **Security** | JWT with token versioning (log out everywhere, revoke on password change), BCrypt, ownership checks |
+| 🚦 **Rate limiting** | Per-IP limits on login, sign-up, demo, password reset, contact and AI endpoints (429 + Retry-After) |
 | ⭐ **Feedback** | Rate-us pop-up and contact form that emails the support inbox |
 | 🌍 **i18n + PWA** | English / Hebrew with full right-to-left layout, light/dark theme, installable on the phone |
 
@@ -86,6 +88,8 @@ com.fadikazoura.nextrep
 ├── insights      streaks, weekly totals and achievements (derived from the logged sets)
 ├── demo          one-click demo accounts with sample history, hourly cleanup
 ├── feedback      app rating and contact messages
+├── coach         AI coach: athlete-data briefing for Gemini, guardrails, daily allowance
+├── ratelimit     per-IP request limits (servlet filter + in-memory fixed windows)
 ├── mail          email sending (Brevo API, logging fallback), templates
 ├── common        error handling (RFC 9457 ProblemDetail), paging
 └── config        security, JWT + token-version validator, clock, OpenAPI
@@ -150,6 +154,7 @@ All endpoints except register, login and password reset require `Authorization: 
 | Workouts | `POST /api/users/me/workouts` · `GET .../current` · `GET .../{id}` · `POST .../{id}/sets` · `DELETE .../{id}/sets/{setId}` · `POST .../{id}/complete` · `DELETE .../{id}` · `GET /api/users/me/workouts?page=&size=` |
 | Stats | `GET /api/users/me/records` · `GET /api/users/me/exercises/{id}/progress` · `GET /api/users/me/muscles/volume?days=7` · `GET /api/users/me/insights?tz=&firstDay=` |
 | Feedback | `GET` / `PUT /api/users/me/rating` · `POST /api/users/me/contact` |
+| Coach | `POST /api/users/me/coach?tz=` (question, recent turns, language) |
 
 Errors use a consistent [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `ProblemDetail` body, with field-level
 messages for validation errors.
@@ -179,6 +184,14 @@ messages for validation errors.
 - **Security by default.** Every `/me` endpoint takes the user id from the JWT; other users' resources return 404,
   uploaded images are checked by their magic bytes, user text in emails is HTML-escaped, and secrets come only from
   environment variables.
+- **The AI coach is grounded and fenced in.** Each question goes to Gemini with a short briefing built from the
+  athlete's own data (no name, email or phone). The rules live in the system instruction, which users can't see or
+  change; their words travel as conversation content, so "ignore your instructions" is just text. It stays on
+  training topics, never diagnoses, and each user gets 20 questions a day — a failed AI call doesn't count.
+- **Rate limiting where abuse is cheap.** A servlet filter in front of Spring Security caps logins, sign-ups,
+  demo accounts, password resets, contact messages and AI calls per IP, and answers 429 with Retry-After. The
+  visitor IP comes from Cloudflare's True-Client-IP on Render, not X-Forwarded-For, which clients can forge.
+  Counters are in memory (one instance); several instances would share them through Redis.
 - **Fresh after every deploy.** Static files are served with `Cache-Control: no-cache` + `Last-Modified`, so browsers
   revalidate (cheap 304s) and see a new release immediately; the API is never cached by the service worker.
 
@@ -188,7 +201,7 @@ messages for validation errors.
 ./mvnw verify
 ```
 
-190+ automated tests:
+230+ automated tests:
 
 - **Unit tests** for the pure logic: plan generator, progression engine, personal records, plan validator,
   AI prompt and response handling, email templates.

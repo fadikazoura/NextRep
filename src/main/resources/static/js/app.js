@@ -15,6 +15,7 @@ import { avatar } from './avatars.js';
 import { cachedUser, clearCurrentUser, currentUser } from './current-user.js';
 import { closeAccountMenu, toggleAccountMenu } from './account-menu.js';
 import { openContact, openRating } from './views/feedback.js';
+import { openCoach, resetCoach } from './views/coach.js';
 
 /** Hash routes: #/path. Public routes work without logging in. */
 const ROUTES = {
@@ -39,6 +40,7 @@ const TABS = [
 
 const main = document.getElementById('view');
 let pendingNotice = null;
+let coachOwner = null; // the token the coach conversation belongs to
 let shownPath = null;
 
 /**
@@ -129,6 +131,17 @@ function renderChrome(path) {
     contact.hidden = !session.loggedIn;
     contact.replaceChildren(h('span', {}, t('menu.contact')));
 
+    // The AI coach button floats above the tab bar for logged-in users; a different login starts a new conversation.
+    if (session.token !== coachOwner) {
+        resetCoach();
+        coachOwner = session.token;
+    }
+    const coach = document.getElementById('coach-button');
+    // Hidden during a workout: the rest timer and the set buttons live at the bottom of that screen.
+    coach.hidden = !session.loggedIn || Boolean(ROUTES[path]?.public) || path === '/workout';
+    coach.replaceChildren(icon('sparkles', { size: 22 }), h('span', { class: 'coach-fab-label' }, t('coach.button')));
+    coach.setAttribute('aria-label', t('coach.title'));
+
     const tabbar = document.getElementById('tabbar');
     tabbar.hidden = !session.loggedIn;
     tabbar.replaceChildren(...TABS.map((tab) => h('a', {
@@ -188,6 +201,7 @@ document.getElementById('rate-button').addEventListener('click', () => {
     openRating().catch(() => toast(t('errors.generic')));
 });
 document.getElementById('contact-button').addEventListener('click', openContact);
+document.getElementById('coach-button').addEventListener('click', openCoach);
 
 window.addEventListener('userchange', renderAccountButton);
 
