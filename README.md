@@ -4,7 +4,7 @@
 ![Java 21](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-blue)
-![Tests](https://img.shields.io/badge/tests-190%2B-success)
+![Tests](https://img.shields.io/badge/tests-230%2B-success)
 
 **A smart gym workout tracker — Spring Boot backend + installable web app.** NextRep builds a personalised weekly
 training plan (rule-based or with AI), lets you log every set, tells you **how much to lift next time**, celebrates
@@ -201,7 +201,7 @@ messages for validation errors.
 ./mvnw verify
 ```
 
-190+ automated tests:
+230+ automated tests:
 
 - **Unit tests** for the pure logic: plan generator, progression engine, personal records, plan validator,
   AI prompt and response handling, email templates.
