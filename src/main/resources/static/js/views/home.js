@@ -6,6 +6,9 @@ import { icon } from '../icons.js';
 import { muscleMapCard } from './muscle-map.js';
 import { currentUser } from '../current-user.js';
 import { loadUnit, volumeText } from '../units.js';
+import { session } from '../api.js';
+import { resetProfileStatus } from '../profile-status.js';
+import { clearCurrentUser } from '../current-user.js';
 
 const DAY_NAMES = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']; // JS getDay() order
 
@@ -44,6 +47,7 @@ export async function homeView() {
 
     const main = h('section', { class: 'stack' },
         header,
+        me.demo ? demoBanner() : null,
         current ? inProgressCard(current) : todayCard(plan),
         weekCard(plan, thisWeek, weekStart),
         h('div', { class: 'grid-2' },
@@ -55,6 +59,21 @@ export async function homeView() {
 
     // On wide screens the muscle map sits beside the dashboard; on phones it comes after it.
     return h('div', { class: 'home-layout' }, main, h('aside', { class: 'home-aside' }, muscleMapCard()));
+}
+
+/** Shown inside a demo account: it is temporary, so invite the visitor to make a real one. */
+function demoBanner() {
+    const create = h('button', { class: 'btn btn-sm btn-primary', type: 'button' }, t('demo.create'));
+    create.addEventListener('click', () => {
+        session.clear();
+        resetProfileStatus();
+        clearCurrentUser();
+        location.hash = '#/register';
+    });
+    return h('div', { class: 'card demo-banner' },
+        icon('sparkles', { size: 20 }),
+        h('span', { class: 'small' }, t('demo.banner')),
+        create);
 }
 
 function setupCard() {

@@ -2,7 +2,9 @@ package com.fadikazoura.nextrep.user;
 
 import java.time.Instant;
 
-public record UserResponse(Long id, String username, String email, String phone, Avatar avatar, Instant createdAt) {
+/** {@code demo} is true for a temporary demo account (the UI shows a "create your own account" banner). */
+public record UserResponse(Long id, String username, String email, String phone, Avatar avatar, Instant createdAt,
+                           boolean demo) {
 
     /** kind: INITIALS (no picture), PRESET (one of the built-in avatars, named in {@code preset}) or PHOTO (uploaded). */
     public record Avatar(String kind, String preset) {
@@ -16,6 +18,6 @@ public record UserResponse(Long id, String username, String email, String phone,
 
     public static UserResponse from(User user) {
         return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getPhone(),
-                Avatar.of(user.getAvatarPreset()), user.getCreatedAt());
+                Avatar.of(user.getAvatarPreset()), user.getCreatedAt(), user.isDemo());
     }
 }
