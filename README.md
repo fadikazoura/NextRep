@@ -192,7 +192,11 @@ messages for validation errors.
   **PostgreSQL in Docker (Testcontainers)** — including token revocation, password reset limits and data export.
 - **No real external calls in tests**: Gemini and Brevo clients are tested against `MockRestServiceServer`, and
   tests run with emails switched to the logging sender.
-- **CI**: GitHub Actions runs the whole suite on every push and pull request.
+- **End-to-end tests (Playwright)** drive a real browser through the app — sign-up, profile, plan, logging a
+  workout and seeing the new record, the demo account, Hebrew/RTL — on a desktop and a phone viewport, against
+  the real server and database. Run them with `cd e2e && npm ci && npx playwright install chromium && npm test`.
+- **CI**: GitHub Actions runs the whole suite on every push and pull request: the Maven build and, in a second
+  job, the app started from its jar with PostgreSQL, tested end to end in Chromium.
 
 ## Roadmap
 
@@ -201,7 +205,7 @@ messages for validation errors.
 - [x] Accounts, avatars, password reset by email, feedback
 - [ ] Achievement badges and a weekly summary
 - [ ] Workout reminders (push notifications)
-- [ ] End-to-end UI tests (Playwright)
+- [x] End-to-end UI tests (Playwright) in CI
 - [ ] Refresh tokens and per-user time zones
 
 ## Author
