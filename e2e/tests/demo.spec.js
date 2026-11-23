@@ -12,6 +12,8 @@ test('"Try the demo" opens a ready account full of history', async ({ page }) =>
     await tab(page, 'Progress').click();
     await expect(page.getByRole('heading', { name: 'Personal records' })).toBeVisible();
     await expect(page.locator('.pr-big').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Achievements' })).toBeVisible();
+    await expect(page.locator('.badge-icon.is-unlocked').first()).toBeVisible();
 });
 
 test('a demo visitor can leave to create a real account', async ({ page }) => {
