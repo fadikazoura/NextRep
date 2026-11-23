@@ -27,7 +27,7 @@ export async function homeView() {
     const [me, profileReady] = await Promise.all([currentUser(), hasProfile()]);
     const name = me.username;
 
-    const header = h('div', { class: 'stack', style: 'gap: 2px' },
+    const header = h('div', { class: 'stack home-head', style: 'gap: 2px' },
         h('p', { class: 'muted small eyebrow' }, todayLabel()),
         h('h1', {}, t('home.hello', { email: name })));
 
@@ -48,18 +48,23 @@ export async function homeView() {
     const thisWeek = history.content.filter((w) => new Date(w.startedAt) >= weekStart);
     const volume = thisWeek.reduce((sum, w) => sum + Number(w.totalVolumeKg), 0);
 
-    const main = h('section', { class: 'stack' },
+    // Each block names its place, so on a wide screen the CSS can lay them out as a grid that fits without scrolling.
+    const place = (el, area) => {
+        el?.classList.add(`home-${area}`);
+        return el;
+    };
+    const main = h('section', { class: 'stack home-main' },
         header,
-        me.demo ? demoBanner() : null,
-        current ? inProgressCard(current) : todayCard(plan),
-        weekCard(plan, thisWeek, weekStart, insights?.streakWeeks ?? 0),
-        insights ? lastWeekCard(insights) : null,
-        h('div', { class: 'grid-2' },
+        me.demo ? place(demoBanner(), 'demo') : null,
+        place(current ? inProgressCard(current) : todayCard(plan), 'today'),
+        place(weekCard(plan, thisWeek, weekStart, insights?.streakWeeks ?? 0), 'week'),
+        insights ? place(lastWeekCard(insights), 'last') : null,
+        place(h('div', { class: 'grid-2' },
             stat(icon('bolt', { size: 18 }), volumeText(volume), t('home.weekVolume')),
-            stat(icon('flame', { size: 18 }), String(history.totalElements), t('home.totalWorkouts'))),
-        h('div', { class: 'grid-2' },
+            stat(icon('flame', { size: 18 }), String(history.totalElements), t('home.totalWorkouts'))), 'stats'),
+        place(h('div', { class: 'grid-2' },
             quickLink('#/progress', 'chart', t('home.progress')),
-            quickLink('#/profile', 'user', t('home.profile'))));
+            quickLink('#/profile', 'user', t('home.profile'))), 'links'));
 
     // On wide screens the muscle map sits beside the dashboard; on phones it comes after it.
     return h('div', { class: 'home-layout' }, main, h('aside', { class: 'home-aside' }, muscleMapCard()));

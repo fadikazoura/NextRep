@@ -708,17 +708,44 @@ section:has(> .rest-bar:not([hidden])) { padding-bottom: 84px; }
 /* ---------- muscle map ---------- */
 .home-layout { display: flex; flex-direction: column; gap: var(--gap); }
 
+/*
+ * Wide screens: the whole home page fits in one screen, no scrolling. Three columns —
+ * today + this week | last week + numbers + links | the muscle map, whose size follows the window height.
+ */
 @media (min-width: 1100px) {
-    .container:has(> .home-layout) { max-width: 1160px; }
+    .container:has(> .home-layout) { max-width: 1280px; padding-top: 16px; }
     .home-layout {
         display: grid;
-        grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
-        gap: 28px;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        gap: 20px;
         align-items: stretch; /* the muscle map card is as tall as the dashboard next to it */
     }
+    .home-main {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "head  head"
+            "demo  demo"
+            "today last"
+            "week  stats"
+            "week  links";
+        grid-template-rows: auto auto auto auto 1fr;
+        gap: 16px;
+        align-content: start;
+    }
+    .home-head { grid-area: head; }
+    .home-demo { grid-area: demo; }
+    .home-today { grid-area: today; }
+    .home-week { grid-area: week; }
+    .home-last { grid-area: last; }
+    .home-stats { grid-area: stats; }
+    .home-links { grid-area: links; align-self: start; }
     .home-aside { display: flex; flex-direction: column; }
     .home-aside .muscle-card { flex: 1; }
     .home-aside .muscle-figure { flex: 1; align-items: center; } /* the extra height goes around the figure */
+    /* the 3D body is as big as the window allows (it keeps a 4:5 shape), so the card never pushes past the screen */
+    .home-aside .body3d { max-width: min(380px, calc((100dvh - 390px) * 0.8)); }
+    .home-week { justify-content: space-between; } /* when it is taller than its content, the days sit at the bottom */
 }
 
 .muscle-figure {
