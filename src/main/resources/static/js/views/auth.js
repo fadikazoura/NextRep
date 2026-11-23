@@ -1,4 +1,4 @@
-import { h } from '../dom.js';
+import { h, toast } from '../dom.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { api, ApiError, session } from '../api.js';
@@ -20,7 +20,33 @@ export function loginView({ notice } = {}) {
         ],
         footer: h('p', { class: 'muted small center' }, `${t('auth.noAccount')} `, h('a', { href: '#/register' }, t('auth.register'))),
         onSubmit: () => logIn(login.value.trim(), password.value),
+        after: demoCard(),
     });
+}
+
+/** "Try the demo": one tap, no sign-up — the server creates a private account full of sample data. */
+function demoCard() {
+    const button = h('button', { class: 'btn btn-block btn-demo', type: 'button' }, icon('play', { size: 18 }), t('demo.try'));
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.replaceChildren(h('span', { class: 'spinner spinner-sm', 'aria-hidden': 'true' }), t('demo.preparing'));
+        try {
+            const { accessToken } = await api('/api/auth/demo', { method: 'POST', authenticated: false });
+            session.save(accessToken);
+            resetProfileStatus();
+            clearCurrentUser();
+            location.hash = '#/';
+        } catch (error) {
+            toast(error instanceof ApiError && error.status === 0 ? t('errors.network') : t('errors.generic'));
+            button.disabled = false;
+            button.replaceChildren(icon('play', { size: 18 }), t('demo.try'));
+        }
+    });
+    return h('div', { class: 'card demo-card stack' },
+        h('div', { class: 'stack', style: 'gap: 2px' },
+            h('strong', {}, t('demo.title')),
+            h('span', { class: 'muted small' }, t('demo.hint'))),
+        button);
 }
 
 export function registerView() {
@@ -117,7 +143,7 @@ export function clearFormErrors(form, formError) {
     formError.hidden = true;
 }
 
-export function authPage({ title, subtitle, submitLabel, notice, fields, footer, onSubmit }) {
+export function authPage({ title, subtitle, submitLabel, notice, fields, footer, onSubmit, after }) {
     const formError = h('p', { class: 'form-error', role: 'alert', hidden: true });
     const submit = h('button', { class: 'btn btn-primary btn-block', type: 'submit' }, submitLabel);
     const form = h('form', { class: 'card stack', novalidate: true },
@@ -146,7 +172,8 @@ export function authPage({ title, subtitle, submitLabel, notice, fields, footer,
         h('div', { class: 'hero stack' },
             h('div', { class: 'brand' }, 'Next', h('span', {}, 'Rep')),
             h('p', { class: 'muted' }, t('app.tagline'))),
-        form);
+        form,
+        after ?? null);
 }
 
 function messageFor(error) {

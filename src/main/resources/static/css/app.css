@@ -1149,3 +1149,11 @@ input:disabled { opacity: 0.65; cursor: not-allowed; }
     .ring-bar { transition: none; }
     .ring-full { animation: none; }
 }
+
+/* ---------- demo account ---------- */
+.demo-card { gap: 12px; border-style: dashed; border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.btn-demo { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.btn-demo:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.spinner-sm { width: 16px; height: 16px; border-width: 2px; margin: 0; }
+.demo-banner { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.demo-banner .icon { color: var(--accent); flex: none; }

@@ -49,6 +49,9 @@ public class User {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** Set only for demo accounts: after this moment the account and all its data are deleted. */
+    private Instant demoExpiresAt;
+
     public static final String PHOTO_AVATAR = "photo";
 
     public User(String username, String email, String passwordHash) {
@@ -77,5 +80,13 @@ public class User {
 
     public void revokeTokens() {
         this.tokenVersion++;
+    }
+
+    public void markAsDemo(Instant expiresAt) {
+        this.demoExpiresAt = expiresAt;
+    }
+
+    public boolean isDemo() {
+        return demoExpiresAt != null;
     }
 }

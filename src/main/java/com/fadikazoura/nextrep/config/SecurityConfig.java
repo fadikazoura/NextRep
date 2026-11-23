@@ -20,7 +20,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/demo",
                                 "/api/auth/password-reset", "/api/auth/password-reset/confirm").permitAll()
                         .requestMatchers("/error").permitAll()
                         // The web UI's static files are public; every API call it makes still needs a token.
